@@ -28,5 +28,6 @@ namespace System
 
             return new _Disposable(disposable);
         }
+        //TODO? Create<TState>(Action<TState>,TState)
     }
 }

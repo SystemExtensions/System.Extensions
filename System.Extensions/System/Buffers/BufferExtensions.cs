@@ -86,6 +86,7 @@ namespace System.Buffers
             }
         }
         //TODO? Write<T>(T value) Write<T>(T value,format)
+        //TODO? NumberFormatInfo.InvariantInfo
         public static void Write(this BufferWriter<char> @this, byte value)
         {
             var charSpan = @this.GetSpan();

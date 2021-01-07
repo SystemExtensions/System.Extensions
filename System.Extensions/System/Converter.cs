@@ -338,8 +338,7 @@ namespace System
                         Register(tValue, tResult, value, out var expression, out _);
                         if (expression != null)
                         {
-                            var expr = Expression.Block(
-                                new ParameterExpression[] { value },
+                            var expr = Expression.Block(new [] { value },
                                 Expression.Assign(value, Expression.Convert(objValue, tValue)),
                                 Expression.Convert(expression, typeof(object)));
                             handler = Expression.Lambda<Func<object, object>>(expr, objValue).Compile();

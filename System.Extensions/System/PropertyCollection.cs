@@ -64,7 +64,7 @@ namespace System
                     if (value == null)
                         return;
                     //Array.Resize(ref _values, Property<T>.Properties.Count);
-                    object[] newValues = new object[Property<T>.Properties.Count];
+                    var newValues = new object[Property<T>.Properties.Count];
                     Array.Copy(_values, newValues, _values.Length);
                     _values = newValues;
                 }
