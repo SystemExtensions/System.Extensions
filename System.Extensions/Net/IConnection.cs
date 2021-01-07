@@ -6,7 +6,8 @@ namespace System.Extensions.Net
     public interface IConnection
     {
         PropertyCollection<IConnection> Properties { get; }
-        bool IsSecure { get; }
+        bool Connected { get; }
+        ISecurity Security { get; }
         EndPoint LocalEndPoint { get; }
         EndPoint RemoteEndPoint { get; }
         int Receive(Span<byte> buffer);
@@ -19,5 +20,6 @@ namespace System.Extensions.Net
         Task SendAsync(byte[] buffer, int offset, int count);
         void SendFile(string fileName);
         Task SendFileAsync(string fileName);
+        void Close();
     }
 }

@@ -1,0 +1,160 @@
+﻿@inherits View<object>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Books</title>
+    <link href="/Js/layui-2.5.6/css/layui.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="layui-fluid">
+        <div class="layui-row layui-col-space15">
+            <div class="layui-col-md12">
+                <div class="layui-card">
+                    <div class="layui-card-body">
+                        <div class="layui-form">
+                            <label>ISBN：</label>
+                            <div class="layui-inline"><input class="layui-input" style="width:80px" name="isbn" autocomplete="off"></div>
+                            <label>Name：</label>
+                            <div class="layui-inline"><input class="layui-input" style="width:120px" name="name" autocomplete="off"></div>
+                            <button class="layui-btn" lay-submit lay-filter="search">SEARCH</button>
+                            <button class="layui-btn" lay-submit lay-filter="delete">DELETE</button>
+                            <button class="layui-btn" lay-submit lay-filter="add">ADD</button>
+                            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-submit lay-filter="logout">Logout</a>
+                        </div>
+                        <table class="layui-hide" id="book-table" lay-filter="book-table"></table>
+                        <script type="text/html" id="book-table-img">
+                            <img style="display:inline-block;width:100%;height:100%;" src="{{d.ImageUrl}}" />
+                        </script>
+                        <script type="text/html" id="book-table-operate">
+                            <a class="layui-btn layui-btn-normal layui-btn-xs" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>EDIT</a>
+                            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="delete"><i class="layui-icon layui-icon-delete"></i>DELETE</a>
+                        </script>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/Js/layui-2.5.6/layui.js"></script>
+    <script>
+        layui.use('table', function () {
+            var table = layui.table, form = layui.form, $ = layui.$;
+            table.render({
+                elem: '#book-table',
+                url: '/Books1',
+                method: 'post',
+                limit: 10,
+                page: {
+                    layout: ['prev', 'page', 'next'], prev: '<em>←</em>', next: '<em>→</em>'
+                },
+                autoSort: false,
+                cols: [[
+                    { type: 'checkbox' },
+                    { field: 'ImageUrl', title: 'Image', width: 80, templet: '#book-table-img' },
+                    { field: 'ISBN', title: 'ISBN', width: 160 },
+                    { field: 'Name', title: 'Name', width: 240 },
+                    { field: 'Author', title: 'Author', width: 160 },
+                    { field: 'Category.Name', title: 'Category', width: 120, sort: true, templet: function (d) { return d.Category.Name; } },
+                    { field: 'CreateTime', title: 'CreateTime', width: 160, sort: true },
+                    { align: 'center', width: 240, toolbar: '#book-table-operate' }
+                ]]
+            });
+            table.on('tool(book-table)', function (obj) {
+                var data = obj.data;
+                if (obj.event === 'edit') {
+                    layer.open({
+                        type: 2,
+                        title: data.Name,
+                        content: '/Book/Edit/' + data.Id,
+                        area: ['500px', '620px']
+                    });
+                } else if (obj.event === 'delete') {
+                    layer.confirm('Are you sure?', function (index) {
+                        $.ajax({
+                            url: "/Book/Delete/" + data.Id,
+                            type: "POST",
+                            dataType: "json",
+                            success: function (res) {
+                                if (res.code == 0) {
+                                    table.reload('book-table');
+                                    layer.msg(res.msg);
+                                } else {
+                                    layer.msg(res.msg);
+                                }
+                            }
+                        });
+                    });
+                }
+            });
+            table.on('sort(book-table)', function (obj) { 
+                table.reload('book-table', {
+                    initSort: obj,
+                    where: {
+                        field: obj.field,
+                        order: obj.type
+                    }
+                });
+            });
+            form.on('submit(search)', function (data) {
+                table.reload('book-table', {
+                    page: { curr: 1 },
+                    where: data.field
+                });
+                return false;
+            });
+            form.on('submit(delete)', function (data) {
+                var checkData = table.checkStatus('book-table').data;
+
+                if (checkData.length === 0) {
+                    return layer.msg('Please select');
+                }
+                var ids = new Array();
+                for (var i = 0; i < checkData.length; i++) {
+                    ids.push(checkData[i].Id);
+                }
+                layer.confirm('Are you sure?', function (index) {
+                    $.ajax({
+                        url: "/Book/Delete",
+                        type: "POST",
+                        data: { ids: ids.join() },
+                        dataType: "json",
+                        success: function (res) {
+                            if (res.code == 0) {
+                                table.reload('book-table');
+                                layer.msg(res.msg);
+                            } else {
+                                layer.msg(res.msg);
+                            }
+                        }
+                    });
+                });
+                return false;
+            });
+            form.on('submit(add)', function (data) {
+                layer.open({
+                    type: 2,
+                    title: 'Add Book',
+                    content: '/Book/Add',
+                    area: ['500px', '620px']
+                });
+                return false;
+            });
+            form.on('submit(logout)', function (data) {
+                $.ajax({
+                    url: "/Logout",
+                    type: "POST",
+                    dataType: "json",
+                    success: function (res) {
+                        if (res.code == 0) {
+                            window.location = "/Login";
+                        } else {
+                            layer.msg(res.msg);
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>

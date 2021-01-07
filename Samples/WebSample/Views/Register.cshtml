@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Register</title>
+    <script src="/Js/jQuery-3.3.1/jquery.min.js"></script>
+    <script>
+        $(function () {
+            $("#btnRegister").click(function () {
+                $.ajax({
+                    url: "/Register",
+                    type: "POST",
+                    dataType:"json",
+                    data: $("#register").serialize(),
+                    success: function (res) {
+                       alert(res.msg);
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <form id="register">
+        Login Name: <input name="name" type="text" /><br />
+        Login Password:<input name="password" type="password" /><br />
+        <input id="btnRegister" type="button" value="REGISTER" />
+    </form>
+</body>
+</html>

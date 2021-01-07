@@ -6,141 +6,503 @@ namespace System.Extensions.Net
     using System.Net.Sockets;
     using System.Threading;
     using System.Threading.Tasks;
-    public class TcpServer : IConnectionService, IDisposable
+    using System.Runtime.InteropServices;
+    public class TcpServer
     {
-        public class Connection : IConnection
+        #region private
+        private bool _listening;
+        private Socket _socket;
+        private EndPoint _localEndPoint;
+        private Connection[] _connections;
+        #endregion
+        private class TcpConnection : IConnection
         {
-            internal IExecutor Executor;//可以反射
-            internal SocketAsyncEventArgs AcceptArgs;
-            public PropertyCollection<IConnection> Properties => throw new NotImplementedException();
-
-            public bool IsSecure => throw new NotImplementedException();
-
-            public EndPoint LocalEndPoint => throw new NotImplementedException();
-
-            public EndPoint RemoteEndPoint => throw new NotImplementedException();
-
+            private PropertyCollection<IConnection> _properties;
+            private Connection _connection;
+            public TcpConnection(Connection connection)
+            {
+                _properties = new PropertyCollection<IConnection>();
+                _connection = connection;
+            }
+            public PropertyCollection<IConnection> Properties => _properties;
+            public bool Connected
+            {
+                get
+                {
+                    var connection = _connection;
+                    if (connection == null)
+                        return false;
+                    return connection.Connected;
+                }
+            }
+            public ISecurity Security => null;
+            public EndPoint LocalEndPoint
+            {
+                get
+                {
+                    var connection = _connection;
+                    if (connection == null)
+                        return null;
+                    return connection.LocalEndPoint;
+                }
+            }
+            public EndPoint RemoteEndPoint
+            {
+                get
+                {
+                    var connection = _connection;
+                    if (connection == null)
+                        return null;
+                    return connection.RemoteEndPoint;
+                }
+            }
             public int Receive(Span<byte> buffer)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(Receive)}");
 
+                return connection.Receive(buffer);
+            }
             public int Receive(byte[] buffer, int offset, int count)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(Receive)}");
 
+                return connection.Receive(buffer, offset, count);
+            }
             public ValueTask<int> ReceiveAsync(Memory<byte> buffer)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(ReceiveAsync)}");
 
+                return connection.ReceiveAsync(buffer);
+            }
             public ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(ReceiveAsync)}");
 
+                return connection.ReceiveAsync(buffer, offset, count);
+            }
             public void Send(ReadOnlySpan<byte> buffer)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(Send)}");
 
+                connection.Send(buffer);
+            }
             public void Send(byte[] buffer, int offset, int count)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(Send)}");
 
+                connection.Send(buffer, offset, count);
+            }
             public Task SendAsync(ReadOnlyMemory<byte> buffer)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(SendAsync)}");
 
+                return connection.SendAsync(buffer);
+            }
             public Task SendAsync(byte[] buffer, int offset, int count)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(SendAsync)}");
 
+                return connection.SendAsync(buffer, offset, count);
+            }
             public void SendFile(string fileName)
             {
-                throw new NotImplementedException();
-            }
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(SendFile)}");
 
+                connection.SendFile(fileName);
+            }
             public Task SendFileAsync(string fileName)
             {
-                throw new NotImplementedException();
+                var connection = _connection;
+                if (connection == null)
+                    throw new InvalidOperationException($"{nameof(TcpConnection)}.{nameof(SendFileAsync)}");
+
+                return connection.SendFileAsync(fileName);
+            }
+            public void Close()
+            {
+                if (_connection != null)
+                {
+                    var connection = Interlocked.Exchange(ref _connection, null);
+                    if (connection != null)
+                    {
+                        connection.Close();
+                    }
+                }
             }
         }
+        private class Connection : IThreadPoolWorkItem, IDisposable
+        {
+            public Connection(TcpServer server)
+            {
+                _server = server;
+                _acceptArgs = new SocketAsyncEventArgs();
+                _acceptArgs.Completed += AcceptCompleted;
+                _receiveArgs = new SocketAsyncEventArgs();
+                _receiveArgs.Completed += ReceiveCompleted;
+                _sendArgs = new SocketAsyncEventArgs();
+                _sendArgs.Completed += SendCompleted;
+                _sendFileCallback = SendFileCompleted;
+            }
 
-        private bool _active=false;
-        private Socket _socket;
-        private IPEndPoint _localEndPoint;
-        private Connection[] _connections;
+            private TcpServer _server;
+            private TcpConnection _connection;
+            private Socket _socket;
+            private SocketAsyncEventArgs _acceptArgs;
+            private SocketAsyncEventArgs _receiveArgs;
+            private SocketAsyncEventArgs _sendArgs;
+            private AsyncCallback _sendFileCallback;
+            public bool Connected => _socket.Connected;
+            public EndPoint LocalEndPoint => _socket.LocalEndPoint;
+            public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
+            public async void Execute()
+            {
+                Debug.Assert(_connection != null);
+                if (!_server._listening)
+                {
+                    _connection.Close();
+                    _connection = null;
+                    _socket = null;
+                    return;
+                }
 
-        public event Action OnStart;
-        public event Action OnStop;
-        public event Action<Connection> OnConnected;
-        public event Action<Connection> OnDisconnected;
-        public event Action<Connection, Exception> OnException;
+                try
+                {
+                    await _server.Handler.HandleAsync(_connection);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex, "UnobservedException");
+                }
+                finally
+                {
+                    _connection.Close();
+                    _connection = null;
+                    _socket = null;
+                    if (_server._listening)
+                    {
+                        try
+                        {
+                            Accept();
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.WriteLine(ex, "UnobservedException");
+                        }
+                    }
+                }
+            }
+            public void Accept()
+            {
+                if (!_server._socket.AcceptAsync(_acceptArgs))
+                    AcceptCompleted(_server._socket, _acceptArgs);
+            }
+            public void AcceptCompleted(object sender, SocketAsyncEventArgs e)
+            {
+                if (e.AcceptSocket != null && e.SocketError == SocketError.Success)
+                {
+                    Debug.Assert(_connection == null);
+                    Debug.Assert(_socket == null);
+                    _socket = e.AcceptSocket;
+                    e.AcceptSocket = null;
+                    _connection = new TcpConnection(this);
+                    _connection.Socket(_socket);
+                    ThreadPool.UnsafeQueueUserWorkItem(this, false);
+                }
+                else
+                {
+                    if (_server._listening)
+                    {
+                        e.AcceptSocket = null;
+                        try
+                        {
+                            if (_server._socket.AcceptAsync(e))
+                                return;
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.WriteLine(ex, "UnobservedException");
+                        }
+                        AcceptCompleted(_server._socket, _acceptArgs);
+                    }
+                }
+            }
+            public int Receive(Span<byte> buffer)
+            {
+                return _socket.Receive(buffer);
+            }
+            public int Receive(byte[] buffer, int offset, int count)
+            {
+                return _socket.Receive(buffer, offset, count, SocketFlags.None);
+            }
+            public ValueTask<int> ReceiveAsync(Memory<byte> buffer)
+            {
+                var socket = _socket;
+                if (socket.Available > 0)
+                    return new ValueTask<int>(socket.Receive(buffer.Span));
 
+                var tcs = new TaskCompletionSource<int>();
+                var receiveArgs = _receiveArgs;
+                if (receiveArgs.UserToken != null)
+                {
+                    Debug.WriteLine("Warn:ReceiveArgs");
+                    receiveArgs = new SocketAsyncEventArgs();
+                    receiveArgs.Completed += ReceiveCompleted;
+                }
+                receiveArgs.UserToken = tcs;
+                receiveArgs.SetBuffer(buffer);
+                try
+                {
+                    if (socket.ReceiveAsync(receiveArgs))
+                        return new ValueTask<int>(tcs.Task);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                    receiveArgs.UserToken = null;
+                    return new ValueTask<int>(tcs.Task);
+                }
+                if (receiveArgs.SocketError == SocketError.Success)
+                    tcs.TrySetResult(receiveArgs.BytesTransferred);
+                else
+                    tcs.TrySetException(new SocketException((int)receiveArgs.SocketError));
+                receiveArgs.UserToken = null;
+                return new ValueTask<int>(tcs.Task);
+            }
+            public ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count)
+            {
+                var socket = _socket;
+                if (socket.Available > 0)
+                    return new ValueTask<int>(socket.Receive(buffer, offset, count, SocketFlags.None));
+
+                var tcs = new TaskCompletionSource<int>();
+                var receiveArgs = _receiveArgs;
+                if (receiveArgs.UserToken != null)
+                {
+                    Debug.WriteLine("Warn:ReceiveArgs");
+                    receiveArgs = new SocketAsyncEventArgs();
+                    receiveArgs.Completed += ReceiveCompleted;
+                }
+                receiveArgs.UserToken = tcs;
+                receiveArgs.SetBuffer(buffer, offset, count);
+                try
+                {
+                    if (socket.ReceiveAsync(receiveArgs))
+                        return new ValueTask<int>(tcs.Task);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                    receiveArgs.UserToken = null;
+                    return new ValueTask<int>(tcs.Task);
+                }
+                if (receiveArgs.SocketError == SocketError.Success)
+                    tcs.TrySetResult(receiveArgs.BytesTransferred);
+                else
+                    tcs.TrySetException(new SocketException((int)receiveArgs.SocketError));
+                receiveArgs.UserToken = null;
+                return new ValueTask<int>(tcs.Task);
+            }
+            public void Send(ReadOnlySpan<byte> buffer)
+            {
+                _socket.Send(buffer);
+            }
+            public void Send(byte[] buffer, int offset, int count)
+            {
+                _socket.Send(buffer, offset, count, SocketFlags.None);
+            }
+            public Task SendAsync(ReadOnlyMemory<byte> buffer)
+            {
+                var socket = _socket;
+                var tcs = new TaskCompletionSource<object>();
+                var sendArgs = _sendArgs;
+                if (sendArgs.UserToken != null)
+                {
+                    Debug.WriteLine("Warn:SendArgs");
+                    sendArgs = new SocketAsyncEventArgs();
+                    sendArgs.Completed += SendCompleted;
+                }
+                sendArgs.UserToken = tcs;
+                sendArgs.SetBuffer(MemoryMarshal.AsMemory(buffer));
+                try
+                {
+                    if (socket.SendAsync(sendArgs))
+                        return tcs.Task;
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                    sendArgs.UserToken = null;
+                    return tcs.Task;
+                }
+                if (sendArgs.SocketError == SocketError.Success)
+                    tcs.TrySetResult(null);
+                else
+                    tcs.TrySetException(new SocketException((int)sendArgs.SocketError));
+                sendArgs.UserToken = null;
+                return tcs.Task;
+            }
+            public Task SendAsync(byte[] buffer, int offset, int count)
+            {
+                var socket = _socket;
+                var tcs = new TaskCompletionSource<object>();
+                var sendArgs = _sendArgs;
+                if (sendArgs.UserToken != null)
+                {
+                    Debug.WriteLine("Warn:SendArgs");
+                    sendArgs = new SocketAsyncEventArgs();
+                    sendArgs.Completed += SendCompleted;
+                }
+                sendArgs.UserToken = tcs;
+                sendArgs.SetBuffer(buffer, offset, count);
+                try
+                {
+                    if (socket.SendAsync(sendArgs))
+                        return tcs.Task;
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                    sendArgs.UserToken = null;
+                    return tcs.Task;
+                }
+                if (sendArgs.SocketError == SocketError.Success)
+                    tcs.TrySetResult(null);
+                else
+                    tcs.TrySetException(new SocketException((int)sendArgs.SocketError));
+                sendArgs.UserToken = null;
+                return tcs.Task;
+            }
+            public void SendFile(string fileName)
+            {
+                _socket.SendFile(fileName);
+            }
+            public Task SendFileAsync(string fileName)//windows TransmitFile Max=2G
+            {
+                var socket = _socket;
+                var tcs = new TaskCompletionSource<object>(socket);
+                socket.BeginSendFile(fileName, _sendFileCallback, tcs);
+                return tcs.Task;
+            }
+            public void Close()
+            {
+                try
+                {
+                    _socket.Shutdown(SocketShutdown.Both);
+                }
+                catch (Exception ex)
+                {
+                    Trace.WriteLine(ex, "UnobservedException");
+                }
+                finally
+                {
+                    _socket.Close();
+                }
+                _receiveArgs.Clear();
+                _sendArgs.Clear();
+            }
+            public void Dispose()
+            {
+                _connection?.Close();
+                _acceptArgs.Dispose();
+                _receiveArgs.Dispose();
+                _sendArgs.Dispose();
+            }
+
+            #region Completed
+            static void ReceiveCompleted(object sender, SocketAsyncEventArgs e)
+            {
+                var tcs = (TaskCompletionSource<int>)e.UserToken;
+                Debug.Assert(tcs != null);
+                var socketError = e.SocketError;
+                var bytesTransferred = e.BytesTransferred;
+                e.UserToken = null;
+                if (socketError == SocketError.Success)
+                {
+                    tcs.TrySetResult(bytesTransferred);
+                }
+                else
+                {
+                    tcs.TrySetException(new SocketException((int)socketError));
+                }
+            }
+            static void SendCompleted(object sender, SocketAsyncEventArgs e)
+            {
+                var tcs = (TaskCompletionSource<object>)e.UserToken;
+                Debug.Assert(tcs != null);
+                var socketError = e.SocketError;
+                e.UserToken = null;
+                if (socketError == SocketError.Success)
+                {
+                    tcs.TrySetResult(null);
+                }
+                else
+                {
+                    tcs.TrySetException(new SocketException((int)socketError));
+                }
+            }
+            static void SendFileCompleted(IAsyncResult ar)
+            {
+                var tcs = (TaskCompletionSource<object>)ar.AsyncState;
+                Debug.Assert(tcs != null);
+                var socket = (Socket)tcs.Task.AsyncState;
+                try
+                {
+                    socket.EndSendFile(ar);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                    return;
+                }
+                tcs.TrySetResult(null);
+            }
+            #endregion
+        }
         public TcpServer(int port) :
             this(new IPEndPoint(IPAddress.Any, port))
         { }
-        public TcpServer(IPAddress localIP, int port)
-            : this(new IPEndPoint(localIP, port))
+        public TcpServer(string ipAddress, int port) :
+            this(new IPEndPoint(IPAddress.Parse(ipAddress), port))
         { }
-        public TcpServer(IPEndPoint localEndPoint)
+        public TcpServer(EndPoint localEndPoint)
         {
             if (localEndPoint == null)
                 throw new ArgumentNullException(nameof(localEndPoint));
 
-            _handleAsync = HandleAsync;
-            _handleWaitCallback = HandleAsync;
             _localEndPoint = localEndPoint;
-            _socket = new Socket(_localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _socket = localEndPoint is UnixDomainSocketEndPoint
+                    ? new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified)
+                    : new Socket(localEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
         }
-
-        protected bool Active => _active;//这个不要
         public Socket Socket => _socket;
-        public IPEndPoint LocalEndPoint => _localEndPoint;
-        public Connection[] Connections => _connections;
+        public EndPoint LocalEndPoint => _localEndPoint;
         public IConnectionHandler Handler { get; set; }
-
         public void Start()
         {
-            Start(8192, int.MaxValue);
-        }//connExecutor
+            Start(Environment.ProcessorCount * 1024, 65535);
+        }
         public void Start(int maxConnections, int backlog)
         {
-            if (_active)
-                return;
-            if (backlog <= 0)
-                throw new ArgumentOutOfRangeException(nameof(backlog));
-
-            _socket.Bind(_localEndPoint);
-            _connections = new Connection[maxConnections];
-            for (int i = 0; i < maxConnections; i++)
-            {
-                _connections[i] = new Connection();
-                _connections[i].Executor = null;//使用线程池执行
-                _connections[i].AcceptArgs = new SocketAsyncEventArgs();
-                _connections[i].AcceptArgs.Completed += AcceptCompleted;
-                _connections[i].AcceptArgs.UserToken = _connections[i];
-            }
-            OnStart?.Invoke();
-            _socket.Listen(backlog);
-            for (int i = 0; i < _connections.Length; i++)
-            {
-                _socket.AcceptAsync(_connections[i].AcceptArgs);
-            }
-            Trace.TraceInformation($"Server:{_localEndPoint} is start");
-            _active = true;
-        }
-        public void Start(Func<int, IExecutor> executorDelegate, int maxConnections, int backlog)
-        {
-            if (_active)
-                return;
-            if (executorDelegate == null)
-                throw new ArgumentNullException(nameof(executorDelegate));
+            if (_listening)
+                throw new InvalidOperationException(nameof(Start));
             if (maxConnections <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxConnections));
             if (backlog <= 0)
@@ -148,130 +510,29 @@ namespace System.Extensions.Net
 
             _socket.Bind(_localEndPoint);
             _connections = new Connection[maxConnections];
-            for (int i = 0; i < _connections.Length; i++)
+            for (int i = 0; i < maxConnections; i++)
             {
-                _connections[i] = new Connection();
-                _connections[i].Executor = executorDelegate(i);
-                _connections[i].AcceptArgs = new SocketAsyncEventArgs();
-                _connections[i].AcceptArgs.Completed += AcceptCompleted;
-                _connections[i].AcceptArgs.UserToken = _connections[i];
+                _connections[i] = new Connection(this);
             }
-            OnStart?.Invoke();
             _socket.Listen(backlog);
+            _listening = true;
             for (int i = 0; i < _connections.Length; i++)
             {
-                _socket.AcceptAsync(_connections[i].AcceptArgs);
+                _connections[i].Accept();
             }
-            Trace.TraceInformation($"Server:{_localEndPoint} is start");
-            _active = true;
         }
         public void Stop()
         {
-            if (!_active)
-                return;
-            _active = false;//避免继续接收到连接
-            //向所有连接发送关闭请求
-            if (_socket != null)
-            {
-                _socket.Close();
-                _socket = null;
-            }
-            OnStop?.Invoke();
-            foreach (var connection in _connections)
-            {
-                //connection.Dispose();
-            }
-            _connections = null;
-            _socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        }
-        private void AcceptCompleted(object sender, SocketAsyncEventArgs acceptArgs)
-        {
-            var connection = (Connection)acceptArgs.UserToken;
-            if (acceptArgs.AcceptSocket != null && acceptArgs.SocketError == SocketError.Success)
-            {
-                //connection.Open(acceptArgs.AcceptSocket);
-                acceptArgs.AcceptSocket = null;
-                if (connection.Executor == null)
-                {
-                    if (!ThreadPool.UnsafeQueueUserWorkItem(_handleWaitCallback, connection))
-                        throw new InvalidOperationException(nameof(ThreadPool.UnsafeQueueUserWorkItem));
-                }
-                else
-                {
-                    connection.Executor.Run(_handleAsync, connection);
-                }
-            }
-            else//Accept失败
-            {
-                //OnAcceptError?.Invoke(acceptEventArgs.SocketError);
-                Trace.TraceWarning("accept error:" + acceptArgs.SocketError);
-                if (_active)//不是激活状态就不响应了
-                {
-                    acceptArgs.AcceptSocket = null;
-                    _socket.AcceptAsync(connection.AcceptArgs);
-                }
-            }
-        }
-
-        private Action<object> _handleAsync;
-        private WaitCallback _handleWaitCallback;
-        private async void HandleAsync(object state)
-        {
-            var connection = (Connection)state;
-            try
-            {
-                OnConnected?.Invoke(connection);//触发事件
-                if (Handler != null)
-                    await Handler.HandleAsync(connection);
-            }
-            catch (AggregateException ex)
-            {
-                Console.WriteLine("复合错误" + ex.InnerExceptions.Count);
-                Console.WriteLine(ex.GetBaseException().Message);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }//忽略异常
-            finally
-            {
-                //await connection.Disposables().DisposeAsync();
-                ((IConnection)connection).Properties.Clear(_PropertyMatch);
-
-                //if (!connection.IsClosed)
-                //   connection.Close();
-
-                OnDisconnected?.Invoke(connection);
-                _socket.AcceptAsync(connection.AcceptArgs);
-            }
-        }
-
-        //移除所有!#的属性
-        private static Predicate<Property<IConnection>> _PropertyMatch
-            = (pDesc) => { return pDesc.Name[0] != '#'; };
-
-        private bool disposed = false;
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposed)
+            if (!_listening)
                 return;
 
-            if (disposing)
+            _listening = false;
+            //TODO
+            _socket.Close();
+            for (int i = 0; i < _connections.Length; i++)
             {
-                Stop();
-                if (_socket != null)
-                {
-                    _socket.Dispose();
-                    _socket = null;
-                }
-                //清理池
+                _connections[i].Dispose();
             }
-            disposed = true;
         }
     }
 }

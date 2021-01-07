@@ -1,0 +1,35 @@
+﻿<Project>
+  
+  <PropertyGroup>
+    <RazorBinPath Condition=" '$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\bin\netcoreapp3.1\</RazorBinPath>
+    <RazorBinPath Condition=" '$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\bin\net472\</RazorBinPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <RazorConfiguration Condition=" '$(RazorConfiguration)' == ''">$(Configuration)</RazorConfiguration>
+    <RazorNamespace Condition=" '$(RazorNamespace)' == ''">$(AssemblyName).Views</RazorNamespace>
+    <RazorBaseType Condition=" '$(RazorBaseType)' == ''">View&lt;object&gt;</RazorBaseType>
+    <RazorPath>$([System.IO.Path]::Combine('$(MsBuildProjectDirectory)', '$(RazorPath)'))</RazorPath>
+    <!--TODO??-->
+    <!--<RazorUsing>intellisense</RazorUsing>-->
+  </PropertyGroup>
+
+  <UsingTask TaskName="System.Extensions.RazorCompilation.RazorGenerator" AssemblyFile="$(RazorBinPath)System.Extensions.RazorCompilation.dll" />
+  <Target Name="RazorGenerateCode" BeforeTargets="CoreCompile">
+    <RazorGenerator
+      Configuration="$(RazorConfiguration)"
+      DebuggerPath="$(MSBuildThisFileDirectory)..\bin\netcoreapp3.1\"
+      Namespace="$(RazorNamespace)"
+      BaseType="$(RazorBaseType)"
+      RazorPath="$(RazorPath)"
+      GeneratePath="$(MsBuildProjectDirectory)\$(IntermediateOutputPath)Razor\" >
+      <Output TaskParameter="GenerateFiles" ItemName="RazorGenerateFiles" />
+    </RazorGenerator>
+    <ItemGroup>
+      <Compile Include="@(RazorGenerateFiles)" />
+    </ItemGroup>
+  </Target>
+
+  <!--<RazorAssembly>$(AssemblyName).Views</RazorAssembly>-->
+  <!--https://github.com/dotnet/aspnetcore/blob/master/src/Razor/Microsoft.NET.Sdk.Razor/src/build/netstandard2.0/Microsoft.NET.Sdk.Razor.Compilation.targets-->
+</Project>

@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\System.Extensions.RazorCompilation.targets" />
+</Project>

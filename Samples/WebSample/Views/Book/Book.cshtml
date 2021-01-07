@@ -1,0 +1,142 @@
+﻿@using WebSample.Models
+@inherits View<Book>
+@{ 
+    var categories = (List<BookCategory>)ViewData["Categories"];
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Book</title>
+    <link href="/Js/layui-2.5.6/css/layui.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="layui-fluid">
+        <div class="layui-card">
+            <div class="layui-card-body" style="padding: 15px;">
+                <form class="layui-form" action="" lay-filter="component-form-group">
+                    <input name="Id" type="hidden" value="@Model.Id" />
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">ISBN</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="ISBN" value="@Model.ISBN" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">Name</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="Name" value="@Model.Name" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">Author</label>
+                        <div class="layui-input-inline">
+                            <input type="text" name="Author" value="@Model.Author" autocomplete="off" class="layui-input">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">Category</label>
+                        <div class="layui-input-inline">
+                            <select name="CategoryId">
+                                @foreach (var category in categories)
+                                {
+                                    <option @(category.Id == Model.CategoryId ? "selected" : "") value="@category.Id">@category.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">ImageUrl</label>
+                        <div class="layui-input-inline">
+                            <input type="text" id="ImageUrl" name="ImageUrl" value="@Model.ImageUrl" placeholder="url or upload" autocomplete="off" class="layui-input" style="width:240px">
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <label class="layui-form-label"></label>
+                        <div class="layui-input-block">
+                            <div class="layui-upload">
+                                <div class="layui-upload-list">
+                                    <img width="160" height="160" class="layui-upload-img" id="bookImage" src="@Model.ImageUrl">
+                                </div>
+                                <button type="button" class="layui-btn layui-btn-normal" id="btnImage">Upload Image</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="layui-form-item">
+                        <div class="layui-input-block">
+                            <div class="layui-footer" style="left: 0;">
+                                @if (Model.Id == 0)
+                                {
+                                    <button class="layui-btn" lay-submit lay-filter="add">ADD</button>
+                                }
+                                else
+                                {
+                                    <button class="layui-btn" lay-submit lay-filter="edit">EDIT</button>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="/Js/layui-2.5.6/layui.js"></script>
+    <script>
+        layui.use(['form','upload'], function () {
+            var form = layui.form;
+            //form.render();
+            var $ = layui.jquery
+                , upload = layui.upload;
+            upload.render({
+                elem: '#btnImage',
+                url: '/Book/Upload',
+                field: 'image',
+                done: function (res) {
+                    if (res.code == 0) {
+                        $('#bookImage').attr('src', res.data);
+                        $('#ImageUrl').val(res.data);
+                        return true;
+                    }
+                    else {
+                        return layer.msg('Upload error');
+                    }
+                }
+            });
+            form.on('submit(add)', function (data) {
+                $.ajax({
+                    url: "/Book/Add",
+                    type: "POST",
+                    data: data.field,
+                    dataType: "json",
+                    success: function (res) {
+                        if (res.code == 0) {
+                            parent.layui.table.reload('book-table');
+                            layer.msg(res.msg);
+                        } else {
+                            layer.msg(res.msg);
+                        }
+                    }
+                });
+                return false;
+            });
+            form.on('submit(edit)', function (data) {
+                $.ajax({
+                    url: "/Book/Edit",
+                    type: "POST",
+                    data: data.field,
+                    dataType: "json",
+                    success: function (res) {
+                        if (res.code == 0) {
+                            parent.layui.table.reload('book-table');
+                            layer.msg(res.msg);
+                        } else {
+                            layer.msg(res.msg);
+                        }
+                    }
+                });
+                return false;
+            });
+        });
+    </script>
+</body>
+</html>
