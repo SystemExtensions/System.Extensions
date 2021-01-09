@@ -50,7 +50,6 @@ namespace System.Collections.Concurrent
             {
                 _sync.Exit(false);
             }
-
         }
         public Task<T> WaitAsync() 
         {

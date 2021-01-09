@@ -69,7 +69,7 @@ namespace System.Extensions.Net
             public X509Certificate Certificate;//
             public int HandShakeTimeout = -5000;//5s-10s
         }
-        public static IHttpService UseHttp(this TcpServer @this, Action<HttpOptions> options, IHttpHandler handler)
+        public static IHttpService UseHttp(this IConnectionService @this, Action<HttpOptions> options, IHttpHandler handler)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -86,7 +86,7 @@ namespace System.Extensions.Net
             @this.Handler = service;
             return service;
         }
-        public static IHttpService UseHttp(this TcpServer @this, Action<HttpOptions, HttpRouter> handler)
+        public static IHttpService UseHttp(this IConnectionService @this, Action<HttpOptions, HttpRouter> handler)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -106,11 +106,11 @@ namespace System.Extensions.Net
             @this.Handler = service;
             return service;
         }
-        public static IHttpService UseHttp(this TcpServer @this, Action<HttpOptions> options, Func<HttpRequest, Task<HttpResponse>> handler)
+        public static IHttpService UseHttp(this IConnectionService @this, Action<HttpOptions> options, Func<HttpRequest, Task<HttpResponse>> handler)
         {
             return UseHttp(@this, options, HttpHandler.Create(handler));
         }
-        public static IHttpService UseHttps(this TcpServer @this, Action<HttpsOptions> options, IHttpHandler handler)
+        public static IHttpService UseHttps(this IConnectionService @this, Action<HttpsOptions> options, IHttpHandler handler)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -130,7 +130,7 @@ namespace System.Extensions.Net
             @this.Handler = https;
             return https;
         }
-        public static IHttpService UseHttps(this TcpServer @this, Action<HttpsOptions, HttpRouter> handler)
+        public static IHttpService UseHttps(this IConnectionService @this, Action<HttpsOptions, HttpRouter> handler)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -153,7 +153,7 @@ namespace System.Extensions.Net
             @this.Handler = https;
             return https;
         }
-        public static IHttpService UseHttps(this TcpServer @this, Action<HttpsOptions> options, Func<HttpRequest, Task<HttpResponse>> handler)
+        public static IHttpService UseHttps(this IConnectionService @this, Action<HttpsOptions> options, Func<HttpRequest, Task<HttpResponse>> handler)
         {
             return UseHttps(@this, options, HttpHandler.Create(handler));
         }

@@ -167,7 +167,7 @@ namespace System.Extensions.Http
                 pathSegs.Clear();
                 unsafe
                 {
-                    bool Equals(string value, long valuePrefixLong, char* chars, int startIndex)
+                    static bool Equals(string value, long valuePrefixLong, char* chars, int startIndex)
                     {
                         var offset = 0;
                         var tempCount = value.Length;

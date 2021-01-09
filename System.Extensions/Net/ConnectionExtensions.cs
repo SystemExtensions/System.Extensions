@@ -25,10 +25,10 @@ namespace System.Extensions.Net
                 {
                     await ssl.AuthenticateAsync(options);
                 }
-                catch (Exception ex)
+                catch
                 {
                     ssl.Close();
-                    throw ex;
+                    throw;
                 }
                 return ssl;
             };
@@ -592,7 +592,7 @@ namespace System.Extensions.Net
 
             return _UseSslAsync(@this, options);
         }
-        public static TcpServer Use(this TcpServer @this, Func<IConnection, IConnectionHandler, Task> module)
+        public static IConnectionService Use(this IConnectionService @this, Func<IConnection, IConnectionHandler, Task> module)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));

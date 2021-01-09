@@ -41,7 +41,7 @@ namespace System.Extensions.Net
             public X509Certificate Certificate;//
             public int HandShakeTimeout = -5000;//5s-10s
         }
-        public static IHttpService UseHttp2(this TcpServer @this, Action<Http2Options> options, IHttpHandler handler)
+        public static IHttpService UseHttp2(this IConnectionService @this, Action<Http2Options> options, IHttpHandler handler)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -71,7 +71,7 @@ namespace System.Extensions.Net
             @this.Handler = service;
             return service;
         }
-        public static IHttpService UseHttp2(this TcpServer @this, Action<Http2Options, HttpRouter> handler)
+        public static IHttpService UseHttp2(this IConnectionService @this, Action<Http2Options, HttpRouter> handler)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -104,7 +104,7 @@ namespace System.Extensions.Net
             @this.Handler = service;
             return service;
         }
-        public static IHttpService UseHttp2(this TcpServer @this, Action<Http2Options> options, Func<HttpRequest, Task<HttpResponse>> handler)
+        public static IHttpService UseHttp2(this IConnectionService @this, Action<Http2Options> options, Func<HttpRequest, Task<HttpResponse>> handler)
         {
             return UseHttp2(@this, options, HttpHandler.Create(handler));
         }

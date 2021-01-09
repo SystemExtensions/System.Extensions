@@ -1,7 +1,6 @@
 ﻿
 namespace System.Buffers
 {
-    using System.Diagnostics;
     using System.IO;
     using System.Text;
     using System.Reflection.Emit;
@@ -17,6 +16,15 @@ namespace System.Buffers
                 throw new ArgumentNullException(nameof(@this));
 
             return new _TextWriter(@this);
+        }
+        public static TextWriter AsWriter(this BufferWriter<char> @this, IFormatProvider formatProvider)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (formatProvider == null)
+                throw new ArgumentNullException(nameof(formatProvider));
+
+            return new _TextWriter(@this, formatProvider);
         }
         public static string ToString(this Buffer<char> @this, int startIndex)
         {
@@ -52,286 +60,152 @@ namespace System.Buffers
                 return value;
             }
         }
-        public static void Write(this BufferWriter<char> @this, char ch, int repeatCount)
+        public static void Write(this BufferWriter<char> @this, byte value, string format = null, IFormatProvider provider = null)
         {
-            if (repeatCount <= 0)
-                return;
-
-            var charSpan = @this.GetSpan();
-            if (charSpan.Length >= repeatCount)
-            {
-                for (int i = 0; i < repeatCount; i++)
-                {
-                    charSpan[i] = ch;
-                }
-                @this.Advance(repeatCount);
-            }
-            else
-            {
-                var tempCount = repeatCount;
-                for (; ; )
-                {
-                    var charsToCopy = tempCount < charSpan.Length ? tempCount : charSpan.Length;
-                    for (int i = 0; i < charsToCopy; i++)
-                    {
-                        charSpan[i] = ch;
-                    }
-                    @this.Advance(charsToCopy);
-                    tempCount -= charsToCopy;
-                    Debug.Assert(tempCount >= 0);
-                    if (tempCount == 0)
-                        return;
-                    charSpan = @this.GetSpan();
-                }
-            }
-        }
-        //TODO? Write<T>(T value) Write<T>(T value,format)
-        //TODO? NumberFormatInfo.InvariantInfo
-        public static void Write(this BufferWriter<char> @this, byte value)
-        {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[3];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, sbyte value)
+        public static void Write(this BufferWriter<char> @this, sbyte value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[4];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, short value)
+        public static void Write(this BufferWriter<char> @this, short value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[6];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, ushort value)
+        public static void Write(this BufferWriter<char> @this, ushort value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[5];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, int value)
+        public static void Write(this BufferWriter<char> @this, int value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[11];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, uint value)
+        public static void Write(this BufferWriter<char> @this, uint value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[10];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, long value)
+        public static void Write(this BufferWriter<char> @this, long value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[20];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, ulong value)
+        public static void Write(this BufferWriter<char> @this, ulong value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[20];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, float value)
+        public static void Write(this BufferWriter<char> @this, float value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[24];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, double value)
+        public static void Write(this BufferWriter<char> @this, double value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[24];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, decimal value)
+        public static void Write(this BufferWriter<char> @this, decimal value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[24];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        //TODO? Remove
-        public static void Write(this BufferWriter<char> @this, DateTime value)
+        public static void Write(this BufferWriter<char> @this, DateTime value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
             {
                 @this.Advance(charsWritten);
             }
             else
             {
-                Span<char> dest = stackalloc char[32];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
+                @this.Write(value.ToString(format, provider));
             }
         }
-        public static void Write(this BufferWriter<char> @this, DateTime value, string format)
+        public static void Write(this BufferWriter<char> @this, DateTimeOffset value, string format = null, IFormatProvider provider = null)
         {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten, format))
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format, provider))
+            {
+                @this.Advance(charsWritten);
+            }
+            else
+            {
+                @this.Write(value.ToString(format, provider));
+            }
+        }
+        public static void Write(this BufferWriter<char> @this, Guid value, string format = null)
+        {
+            if (value.TryFormat(@this.GetSpan(), out var charsWritten, format))
             {
                 @this.Advance(charsWritten);
             }
@@ -340,72 +214,7 @@ namespace System.Buffers
                 @this.Write(value.ToString(format));
             }
         }
-        //TODO? Remove
-        public static void Write(this BufferWriter<char> @this, DateTimeOffset value)
-        {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
-            {
-                @this.Advance(charsWritten);
-            }
-            else
-            {
-                Span<char> dest = stackalloc char[32];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
-            }
-        }
-        public static void Write(this BufferWriter<char> @this, DateTimeOffset value, string format)
-        {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten, format))
-            {
-                @this.Advance(charsWritten);
-            }
-            else
-            {
-                @this.Write(value.ToString(format));
-            }
-        }
-        public static void Write(this BufferWriter<char> @this, Guid value)
-        {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten))
-            {
-                @this.Advance(charsWritten);
-            }
-            else
-            {
-                Span<char> dest = stackalloc char[36];
-                if (value.TryFormat(dest, out charsWritten))
-                {
-                    @this.Write(dest.Slice(0, charsWritten));
-                }
-                else
-                {
-                    @this.Write(value.ToString());
-                }
-            }
-        }
-        public static void Write(this BufferWriter<char> @this, Guid value, string format)
-        {
-            var charSpan = @this.GetSpan();
-            if (value.TryFormat(charSpan, out var charsWritten, format))
-            {
-                @this.Advance(charsWritten);
-            }
-            else
-            {
-                @this.Write(value.ToString(format));
-            }
-        }
-
+        //TODO? WriteLine
         #region private
         private static class SizeOfType<T> where T : struct
         {
@@ -428,15 +237,21 @@ namespace System.Buffers
                 _writer = writer;
                 GC.SuppressFinalize(this);
             }
+            public _TextWriter(BufferWriter<char> writer, IFormatProvider formatProvider) 
+                : base(formatProvider)
+            {
+                _writer = writer;
+                GC.SuppressFinalize(this);
+            }
             public override Encoding Encoding => Encoding.Unicode;
             public override void Write(char value) => _writer.Write(value);
-            public override void Write(int value) => _writer.Write(value);
-            public override void Write(uint value) => _writer.Write(value);
-            public override void Write(long value) => _writer.Write(value);
-            public override void Write(ulong value) => _writer.Write(value);
-            public override void Write(float value) => _writer.Write(value);
-            public override void Write(double value) => _writer.Write(value);
-            public override void Write(decimal value) => _writer.Write(value);
+            public override void Write(int value) => _writer.Write(value, provider: FormatProvider);
+            public override void Write(uint value) => _writer.Write(value, provider: FormatProvider);
+            public override void Write(long value) => _writer.Write(value, provider: FormatProvider);
+            public override void Write(ulong value) => _writer.Write(value, provider: FormatProvider);
+            public override void Write(float value) => _writer.Write(value, provider: FormatProvider);
+            public override void Write(double value) => _writer.Write(value, provider: FormatProvider);
+            public override void Write(decimal value) => _writer.Write(value, provider: FormatProvider);
             public override void Write(char[] buffer, int index, int count)
             {
                 _writer.Write(buffer.AsSpan(index, count));
@@ -453,7 +268,45 @@ namespace System.Buffers
             {
                 _writer.Write(value);
             }
+            public override string ToString()
+            {
+                return _writer.ToString();
+            }
         }
         #endregion
+
+        //public static void Write(this BufferWriter<char> @this, char ch, int repeatCount)
+        //{
+        //    if (repeatCount <= 0)
+        //        return;
+
+        //    var charSpan = @this.GetSpan();
+        //    if (charSpan.Length >= repeatCount)
+        //    {
+        //        for (int i = 0; i < repeatCount; i++)
+        //        {
+        //            charSpan[i] = ch;
+        //        }
+        //        @this.Advance(repeatCount);
+        //    }
+        //    else
+        //    {
+        //        var tempCount = repeatCount;
+        //        for (; ; )
+        //        {
+        //            var charsToCopy = tempCount < charSpan.Length ? tempCount : charSpan.Length;
+        //            for (int i = 0; i < charsToCopy; i++)
+        //            {
+        //                charSpan[i] = ch;
+        //            }
+        //            @this.Advance(charsToCopy);
+        //            tempCount -= charsToCopy;
+        //            Debug.Assert(tempCount >= 0);
+        //            if (tempCount == 0)
+        //                return;
+        //            charSpan = @this.GetSpan();
+        //        }
+        //    }
+        //}
     }
 }

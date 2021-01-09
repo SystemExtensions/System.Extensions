@@ -5,6 +5,7 @@
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>SystemExtensions</Authors>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <NuspecFile>System.Extensions.RazorCompilation.nuspec</NuspecFile>

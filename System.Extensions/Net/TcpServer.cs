@@ -7,8 +7,11 @@ namespace System.Extensions.Net
     using System.Threading;
     using System.Threading.Tasks;
     using System.Runtime.InteropServices;
-    public class TcpServer
+    public class TcpServer : IConnectionService
     {
+        //you can impl
+        //_acceptArgs _receiveArgs use same
+        //use new SocketAsyncEventArgs()...
         #region private
         private bool _listening;
         private Socket _socket;

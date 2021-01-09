@@ -1,5 +1,4 @@
 ﻿
-
 namespace System.Extensions.Http
 {
     public interface IHttpModule : IHttpHandler

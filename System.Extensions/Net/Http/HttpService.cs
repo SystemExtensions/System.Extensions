@@ -1934,7 +1934,7 @@ namespace System.Extensions.Net
                             return result;
                         }
                     }
-                    catch (Exception)
+                    catch
                     {
                         _connection._connectionClose = true;
                         _connection = null;
@@ -1977,7 +1977,7 @@ namespace System.Extensions.Net
                             return result;
                         }
                     }
-                    catch (Exception)
+                    catch
                     {
                         _connection._connectionClose = true;
                         _connection = null;
@@ -2139,7 +2139,7 @@ namespace System.Extensions.Net
                             return result;
                         }
                     }
-                    catch //(Exception)
+                    catch
                     {
                         _connection._connectionClose = true;
                         _connection = null;
@@ -2267,7 +2267,7 @@ namespace System.Extensions.Net
                             return result;
                         }
                     }
-                    catch (Exception)
+                    catch
                     {
                         _connection._connectionClose = true;
                         _connection = null;

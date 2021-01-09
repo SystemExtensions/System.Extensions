@@ -2476,7 +2476,7 @@ namespace System.Data
             {
                 transactionAction();
             }
-            catch (Exception)
+            catch
             {
                 transaction.Rollback();
                 throw;
@@ -2495,7 +2495,7 @@ namespace System.Data
             {
                 transactionAction();
             }
-            catch (Exception)
+            catch
             {
                 transaction.Rollback();
                 throw;
@@ -2514,7 +2514,7 @@ namespace System.Data
             {
                 await transactionAction();
             }
-            catch (Exception)
+            catch
             {
                 transaction.Rollback();
                 throw;
@@ -2533,7 +2533,7 @@ namespace System.Data
             {
                 await transactionAction();
             }
-            catch (Exception)
+            catch
             {
                 transaction.Rollback();
                 throw;

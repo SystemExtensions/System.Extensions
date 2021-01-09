@@ -743,15 +743,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[3];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(sbyte value)
@@ -768,15 +760,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[4];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(short value)
@@ -793,15 +777,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[6];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(ushort value)
@@ -818,15 +794,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[5];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(int value)
@@ -843,15 +811,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[11];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(uint value)
@@ -868,15 +828,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[10];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(long value)
@@ -893,15 +845,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[20];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(ulong value)
@@ -918,15 +862,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[20];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(float value)
@@ -943,15 +879,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[24];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(double value)
@@ -968,15 +896,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[24];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(decimal value)
@@ -993,15 +913,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[24];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(ReadOnlySpan<char> value)
@@ -2007,15 +1919,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[3];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(sbyte value)
@@ -2040,15 +1944,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[4];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(short value)
@@ -2073,15 +1969,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[6];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(ushort value)
@@ -2106,15 +1994,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[5];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(int value)
@@ -2139,15 +2019,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[11];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(uint value)
@@ -2172,15 +2044,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[10];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(long value)
@@ -2205,15 +2069,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[20];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(ulong value)
@@ -2238,15 +2094,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[20];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(float value)
@@ -2271,15 +2119,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[24];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(double value)
@@ -2304,15 +2144,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[24];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(decimal value)
@@ -2337,15 +2169,7 @@ namespace System.Text
                 }
                 else
                 {
-                    Span<char> chars = stackalloc char[24];
-                    if (value.TryFormat(chars, out charsWritten, provider: NumberFormatInfo.InvariantInfo))
-                    {
-                        _writer.Write(chars.Slice(0, charsWritten));
-                    }
-                    else
-                    {
-                        _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
-                    }
+                    _writer.Write(value.ToString(NumberFormatInfo.InvariantInfo));
                 }
             }
             public override void WriteNumber(ReadOnlySpan<char> value)

@@ -6,7 +6,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <PackageId>System.Extensions.Core</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Authors>System.Extensions</Authors>
+    <Authors>SystemExtensions</Authors>
     <Description>System.Extensions</Description>
   </PropertyGroup>
 

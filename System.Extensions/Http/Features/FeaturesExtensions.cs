@@ -1869,7 +1869,7 @@ namespace System.Extensions.Http
         }
         public static async Task ReadFormAsync(HttpRequest request, int maxForm, int maxFormData)
         {
-            bool TryParseForm(IHttpHeaders headers, out Encoding _encoding, out string _boundary)
+            static bool TryParseForm(IHttpHeaders headers, out Encoding _encoding, out string _boundary)
             {
                 _encoding = null; _boundary = null;
                 if (!headers.TryGetValue(HttpHeaders.ContentType, out var contentType))

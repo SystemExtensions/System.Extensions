@@ -3,8 +3,8 @@
   <metadata>
     <id>System.Extensions.RazorCompilation</id>
     <version>$Version$</version>
-    <authors>System.Extensions</authors>
-    <owners>System.Extensions</owners>
+    <authors>SystemExtensions</authors>
+    <owners>SystemExtensions</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>System.Extensions.RazorCompilation</description>
     <dependencies>

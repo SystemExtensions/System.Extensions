@@ -1,7 +1,7 @@
 ﻿
 namespace System.Extensions.Net
 {
-    //TODO(BUG) MaxSize 自增长
+    //TODO(BUG??) MaxSize 自增长
     public class DecoderTable
     {
         //DecoderTable.ContentType;比较引用?
