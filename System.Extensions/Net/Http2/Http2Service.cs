@@ -3032,10 +3032,11 @@ namespace System.Extensions.Net
                 {
                     return await task.Timeout(_service._keepAliveQueue);
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    return await task;
+                    try { await task; } catch { }
+                    throw;
                 }
             }
             public int Receive(Span<byte> buffer)
@@ -3051,12 +3052,13 @@ namespace System.Extensions.Net
                         var task = valueTask.AsTask();
                         try
                         {
-                            return task.Timeout(_service._keepAliveQueue).Result;
+                            return task.Timeout(_service._receiveQueue).Result;
                         }
-                        catch (TimeoutException)
+                        catch
                         {
                             _connection.Close();
-                            return task.Result;
+                            try { task.Wait(); } catch { }
+                            throw;
                         }
                     }
                 }
@@ -3070,12 +3072,13 @@ namespace System.Extensions.Net
                 var task = valueTask.AsTask();
                 try
                 {
-                    return task.Timeout(_service._keepAliveQueue).Result;
+                    return task.Timeout(_service._receiveQueue).Result;
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    return task.Result;
+                    try { task.Wait(); } catch { }
+                    throw;
                 }
             }
             public async ValueTask<int> ReceiveAsync(Memory<byte> buffer)
@@ -3089,10 +3092,11 @@ namespace System.Extensions.Net
                 {
                     return await task.Timeout(_service._receiveQueue);
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    return await task;
+                    try { await task; } catch { }
+                    throw;
                 }
             }
             public async ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count)
@@ -3106,10 +3110,11 @@ namespace System.Extensions.Net
                 {
                     return await task.Timeout(_service._receiveQueue);
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    return await task;
+                    try { await task; } catch { }
+                    throw;
                 }
             }
             public void Send(ReadOnlySpan<byte> buffer) 
@@ -3123,10 +3128,11 @@ namespace System.Extensions.Net
                         {
                             task.Timeout(_service._sendQueue).Wait();
                         }
-                        catch (TimeoutException)
+                        catch
                         {
                             _connection.Close();
-                            task.Wait();
+                            try { task.Wait(); } catch { }
+                            throw;
                         }
                     }
                 }
@@ -3138,10 +3144,11 @@ namespace System.Extensions.Net
                 {
                     task.Timeout(_service._sendQueue).Wait();
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    task.Wait();
+                    try { task.Wait(); } catch { }
+                    throw;
                 }
             }
             public async Task SendAsync(ReadOnlyMemory<byte> buffer)
@@ -3151,10 +3158,11 @@ namespace System.Extensions.Net
                 {
                     await task.Timeout(_service._sendQueue);
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    await task;
+                    try { await task; } catch { }
+                    throw;
                 }
             }
             public async Task SendAsync(byte[] buffer, int offset, int count)
@@ -3164,10 +3172,11 @@ namespace System.Extensions.Net
                 {
                     await task.Timeout(_service._sendQueue);
                 }
-                catch (TimeoutException)
+                catch
                 {
                     _connection.Close();
-                    await task;
+                    try { await task; } catch { }
+                    throw;
                 }
             }
             public void SendFile(string fileName) => _connection.SendFile(fileName);

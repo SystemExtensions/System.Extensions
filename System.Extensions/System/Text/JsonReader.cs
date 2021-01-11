@@ -15936,13 +15936,11 @@ namespace System.Text
                 var properties = type.GetGeneralProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 foreach (var property in properties)
                 {
-                    var ignoreDataMemberAttribute = (IgnoreDataMemberAttribute)property.GetCustomAttribute(typeof(IgnoreDataMemberAttribute));
-                    if (ignoreDataMemberAttribute != null)
+                    if (property.IsDefined(typeof(IgnoreDataMemberAttribute)))
                         continue;
-
                     string propertyName = null;
                     var isRequired = false;
-                    var dataMemberAttribute = (DataMemberAttribute)property.GetCustomAttribute(typeof(DataMemberAttribute));
+                    var dataMemberAttribute = property.GetCustomAttribute<DataMemberAttribute>();
                     if (dataMemberAttribute == null)
                     {
                         if (property.Name == "ExtensionData")
@@ -16980,7 +16978,7 @@ namespace System.Text
                 if (!property.CanWrite)
                     return null;
 
-                var dataFormatAttribute = (DataFormatAttribute)property.GetCustomAttribute(typeof(DataFormatAttribute));
+                var dataFormatAttribute = property.GetCustomAttribute<DataFormatAttribute>();
                 if (dataFormatAttribute == null)
                     return null;
 

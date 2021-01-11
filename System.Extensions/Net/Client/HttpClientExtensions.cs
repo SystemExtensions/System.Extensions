@@ -2243,10 +2243,11 @@ namespace System.Extensions.Http
                             {
                                 return task.Timeout(_timeout).Result;
                             }
-                            catch (TimeoutException)
+                            catch
                             {
                                 _response.Dispose();
-                                return task.Result;
+                                try { task.Wait(); } catch { }
+                                throw;
                             }
                         }
                     }
@@ -2262,10 +2263,11 @@ namespace System.Extensions.Http
                     {
                         return task.Timeout(_timeout).Result;
                     }
-                    catch (TimeoutException)
+                    catch
                     {
                         _response.Dispose();
-                        return task.Result;
+                        try { task.Wait(); } catch { }
+                        throw;
                     }
                 }
                 public async ValueTask<int> ReadAsync(Memory<byte> buffer)
@@ -2279,10 +2281,11 @@ namespace System.Extensions.Http
                     {
                         return await task.Timeout(_timeout);
                     }
-                    catch (TimeoutException)
+                    catch
                     {
                         _response.Dispose();
-                        return await task;
+                        try { await task; } catch { }
+                        throw;
                     }
                 }
                 public async ValueTask<int> ReadAsync(byte[] buffer, int offset, int count)
@@ -2296,10 +2299,11 @@ namespace System.Extensions.Http
                     {
                         return await task.Timeout(_timeout);
                     }
-                    catch (TimeoutException)
+                    catch
                     {
                         _response.Dispose();
-                        return await task;
+                        try { await task; } catch { }
+                        throw;
                     }
                 }
             }

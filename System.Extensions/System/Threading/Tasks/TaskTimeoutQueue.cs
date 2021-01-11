@@ -51,7 +51,7 @@ namespace System.Threading.Tasks
             _head = new Delayed(null) { Flag = _ToWrite };
             _tail = _head;
             _timer = new Timer(TimerCallback);
-            _interval = TimeSpan.FromSeconds(1);
+            _interval = TimeSpan.FromSeconds(1);//TODO param
             _TaskCompleted = TaskCompleted;
             _timerIsRunning = false;
         }
@@ -286,7 +286,7 @@ namespace System.Threading.Tasks
             _head = new Delayed(null) { Flag = _ToWrite };
             _tail = _head;
             _timer = new Timer(TimerCallback);
-            _interval = TimeSpan.FromSeconds(1);
+            _interval = TimeSpan.FromSeconds(1);//TODO param
             _TaskCompleted = TaskCompleted;
             _timerIsRunning = false;
         }

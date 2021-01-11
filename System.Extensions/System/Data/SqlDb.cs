@@ -400,12 +400,12 @@ namespace System.Data
                     SqlDbExtensions.RegisterIdentity(out var identityResolver);
                     SqlDbExtensions.RegisterProperty(out var propertyResolver);
 
-                    var dataTableAttribute = (DataTableAttribute)type.GetCustomAttribute(typeof(DataTableAttribute));
+                    var dataTableAttribute = type.GetCustomAttribute<DataTableAttribute>();
                     table.Name = $"[{dataTableAttribute?.Name ?? tableResolver(type)}]";
                     var identityProperty = identityResolver(type);
                     if (identityProperty != null)
                     {
-                        var dataColumnAttribute = (DataColumnAttribute)identityProperty.GetCustomAttribute(typeof(DataColumnAttribute));
+                        var dataColumnAttribute = identityProperty.GetCustomAttribute<DataColumnAttribute>();
                         table.Identity = $"[{dataColumnAttribute?.Name ?? propertyResolver(identityProperty)}]";
                     }
                     var properties = type.GetGeneralProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -413,11 +413,9 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        if (property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute)) != null)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
-                            continue;
+                        var dataColumnAttribute = property.GetCustomAttribute<DataColumnAttribute>();
                         readerArgs[0] = property.PropertyType;
                         registerReader.Invoke(null, readerArgs);
                         if (readerArgs[3] != null)
@@ -448,7 +446,7 @@ namespace System.Data
                                         continue;
                                     }
                                 }
-                                dataColumnAttribute = (DataColumnAttribute)onPropery.GetCustomAttribute(typeof(DataColumnAttribute));
+                                dataColumnAttribute = onPropery.GetCustomAttribute<DataColumnAttribute>();
                                 joinName = dataColumnAttribute?.Name ?? propertyResolver(onPropery);
                             }
                             joinName = $"[{joinName}]";
@@ -2804,12 +2802,12 @@ namespace System.Data
                     SqlDbExtensions.RegisterIdentity(out var identityResolver);
                     SqlDbExtensions.RegisterProperty(out var propertyResolver);
 
-                    var dataTableAttribute = (DataTableAttribute)type.GetCustomAttribute(typeof(DataTableAttribute));
+                    var dataTableAttribute = type.GetCustomAttribute<DataTableAttribute>();
                     table.Name = $"[{dataTableAttribute?.Name ?? tableResolver(type)}]";
                     var identityProperty = identityResolver(type);
                     if (identityProperty != null)
                     {
-                        var dataColumnAttribute = (DataColumnAttribute)identityProperty.GetCustomAttribute(typeof(DataColumnAttribute));
+                        var dataColumnAttribute = identityProperty.GetCustomAttribute<DataColumnAttribute>();
                         table.Identity = $"[{dataColumnAttribute?.Name ?? propertyResolver(identityProperty)}]";
                     }
                     var properties = type.GetGeneralProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -2817,11 +2815,9 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        if (property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute)) != null)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
-                            continue;
+                        var dataColumnAttribute = property.GetCustomAttribute<DataColumnAttribute>();
                         readerArgs[0] = property.PropertyType;
                         registerReader.Invoke(null, readerArgs);
                         if (readerArgs[3] != null)
@@ -2852,7 +2848,7 @@ namespace System.Data
                                         continue;
                                     }
                                 }
-                                dataColumnAttribute = (DataColumnAttribute)onPropery.GetCustomAttribute(typeof(DataColumnAttribute));
+                                dataColumnAttribute = onPropery.GetCustomAttribute<DataColumnAttribute>();
                                 joinName = dataColumnAttribute?.Name ?? propertyResolver(onPropery);
                             }
                             joinName = $"[{joinName}]";
@@ -5201,12 +5197,12 @@ namespace System.Data
                     SqlDbExtensions.RegisterIdentity(out var identityResolver);
                     SqlDbExtensions.RegisterProperty(out var propertyResolver);
 
-                    var dataTableAttribute = (DataTableAttribute)type.GetCustomAttribute(typeof(DataTableAttribute));
+                    var dataTableAttribute = type.GetCustomAttribute<DataTableAttribute>();
                     table.Name = $"\"{dataTableAttribute?.Name ?? tableResolver(type)}\"";
                     var identityProperty = identityResolver(type);
                     if (identityProperty != null)
                     {
-                        var dataColumnAttribute = (DataColumnAttribute)identityProperty.GetCustomAttribute(typeof(DataColumnAttribute));
+                        var dataColumnAttribute = identityProperty.GetCustomAttribute<DataColumnAttribute>();
                         table.Identity = $"\"{dataColumnAttribute?.Name ?? propertyResolver(identityProperty)}\"";
                     }
                     var properties = type.GetGeneralProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -5214,11 +5210,9 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        if (property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute)) != null)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
-                            continue;
+                        var dataColumnAttribute = property.GetCustomAttribute<DataColumnAttribute>();
                         readerArgs[0] = property.PropertyType;
                         registerReader.Invoke(null, readerArgs);
                         if (readerArgs[3] != null)
@@ -5249,7 +5243,7 @@ namespace System.Data
                                         continue;
                                     }
                                 }
-                                dataColumnAttribute = (DataColumnAttribute)onPropery.GetCustomAttribute(typeof(DataColumnAttribute));
+                                dataColumnAttribute = onPropery.GetCustomAttribute<DataColumnAttribute>();
                                 joinName = dataColumnAttribute?.Name ?? propertyResolver(onPropery);
                             }
                             joinName = $"\"{joinName}\"";
@@ -7634,12 +7628,12 @@ namespace System.Data
                     SqlDbExtensions.RegisterIdentity(out var identityResolver);
                     SqlDbExtensions.RegisterProperty(out var propertyResolver);
 
-                    var dataTableAttribute = (DataTableAttribute)type.GetCustomAttribute(typeof(DataTableAttribute));
+                    var dataTableAttribute = type.GetCustomAttribute<DataTableAttribute>();
                     table.Name = $"\"{dataTableAttribute?.Name ?? tableResolver(type)}\"";
                     var identityProperty = identityResolver(type);
                     if (identityProperty != null)
                     {
-                        var dataColumnAttribute = (DataColumnAttribute)identityProperty.GetCustomAttribute(typeof(DataColumnAttribute));
+                        var dataColumnAttribute = identityProperty.GetCustomAttribute<DataColumnAttribute>();
                         table.Identity = $"\"{dataColumnAttribute?.Name ?? propertyResolver(identityProperty)}\"";
                     }
                     var properties = type.GetGeneralProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -7647,11 +7641,9 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        if (property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute)) != null)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
-                            continue;
+                        var dataColumnAttribute = property.GetCustomAttribute<DataColumnAttribute>();
                         readerArgs[0] = property.PropertyType;
                         registerReader.Invoke(null, readerArgs);
                         if (readerArgs[3] != null)
@@ -7682,7 +7674,7 @@ namespace System.Data
                                         continue;
                                     }
                                 }
-                                dataColumnAttribute = (DataColumnAttribute)onPropery.GetCustomAttribute(typeof(DataColumnAttribute));
+                                dataColumnAttribute = onPropery.GetCustomAttribute<DataColumnAttribute>();
                                 joinName = dataColumnAttribute?.Name ?? propertyResolver(onPropery);
                             }
                             joinName = $"\"{joinName}\"";
@@ -10032,12 +10024,12 @@ namespace System.Data
                     SqlDbExtensions.RegisterIdentity(out var identityResolver);
                     SqlDbExtensions.RegisterProperty(out var propertyResolver);
 
-                    var dataTableAttribute = (DataTableAttribute)type.GetCustomAttribute(typeof(DataTableAttribute));
+                    var dataTableAttribute = type.GetCustomAttribute<DataTableAttribute>();
                     table.Name = $"`{dataTableAttribute?.Name ?? tableResolver(type)}`";
                     var identityProperty = identityResolver(type);
                     if (identityProperty != null)
                     {
-                        var dataColumnAttribute = (DataColumnAttribute)identityProperty.GetCustomAttribute(typeof(DataColumnAttribute));
+                        var dataColumnAttribute = identityProperty.GetCustomAttribute<DataColumnAttribute>();
                         table.Identity = $"`{dataColumnAttribute?.Name ?? propertyResolver(identityProperty)}`";
                     }
                     var properties = type.GetGeneralProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -10045,11 +10037,9 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        if (property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute)) != null)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
-                            continue;
+                        var dataColumnAttribute = property.GetCustomAttribute<DataColumnAttribute>();
                         readerArgs[0] = property.PropertyType;
                         registerReader.Invoke(null, readerArgs);
                         if (readerArgs[3] != null)
@@ -10080,7 +10070,7 @@ namespace System.Data
                                         continue;
                                     }
                                 }
-                                dataColumnAttribute = (DataColumnAttribute)onPropery.GetCustomAttribute(typeof(DataColumnAttribute));
+                                dataColumnAttribute = onPropery.GetCustomAttribute<DataColumnAttribute>();
                                 joinName = dataColumnAttribute?.Name ?? propertyResolver(onPropery);
                             }
                             joinName = $"`{joinName}`";

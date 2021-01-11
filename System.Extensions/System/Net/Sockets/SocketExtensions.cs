@@ -23,20 +23,20 @@ namespace System.Extensions.Net
         //SocketAsyncEventArgs BUG???
         static SocketExtensions() 
         {
-            var args = Expression.Parameter(typeof(SocketAsyncEventArgs),"args");
+            var saea = Expression.Parameter(typeof(SocketAsyncEventArgs), "saea");
             //TODO?? Move To Completed
             //SetBuffer(null, 0, 0);
-            var setBuffer= typeof(SocketAsyncEventArgs).GetMethod("SetBuffer", new[] { typeof(byte[]), typeof(int), typeof(int) });
-            var setBufferExpr = Expression.Call(args, setBuffer, Expression.Constant(null, typeof(byte[])), Expression.Constant(0), Expression.Constant(0));
+            var setBuffer = typeof(SocketAsyncEventArgs).GetMethod("SetBuffer", new[] { typeof(byte[]), typeof(int), typeof(int) });
+            var setBufferExpr = Expression.Call(saea, setBuffer, Expression.Constant(null, typeof(byte[])), Expression.Constant(0), Expression.Constant(0));
             var currentSocket = typeof(SocketAsyncEventArgs).GetField("_currentSocket", BindingFlags.NonPublic | BindingFlags.Instance);
             if (currentSocket != null)
             {
                 _Clear = Expression.Lambda<Action<SocketAsyncEventArgs>>(
-                    Expression.Block(setBufferExpr, Expression.Assign(Expression.Field(args, currentSocket), Expression.Constant(null, typeof(Socket)))), args).Compile();
+                    Expression.Block(setBufferExpr, Expression.Assign(Expression.Field(saea, currentSocket), Expression.Constant(null, typeof(Socket)))), saea).Compile();
             }
-            else 
+            else
             {
-                _Clear = Expression.Lambda<Action<SocketAsyncEventArgs>>(setBufferExpr, args).Compile();
+                _Clear = Expression.Lambda<Action<SocketAsyncEventArgs>>(setBufferExpr, saea).Compile();
             }
         }
 

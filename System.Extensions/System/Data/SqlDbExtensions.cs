@@ -43,10 +43,7 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        if (property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute)) != null)
-                            continue;
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
                         if (property.DeclaringType == currentType)
                             return property;
@@ -655,13 +652,10 @@ namespace System.Data
                     {
                         if (!property.CanWrite)
                             continue;
-                        var ignoreDataColumnAttribute = (IgnoreDataColumnAttribute)property.GetCustomAttribute(typeof(IgnoreDataColumnAttribute));
-                        if (ignoreDataColumnAttribute != null)
+                        if (property.IsDefined(typeof(IgnoreDataColumnAttribute)))
                             continue;
 
-                        var dataColumnAttribute = (DataColumnAttribute)property.GetCustomAttribute(typeof(DataColumnAttribute));
-                        if (dataColumnAttribute == null && !property.SetMethod.IsPublic)
-                            continue;
+                        var dataColumnAttribute = property.GetCustomAttribute<DataColumnAttribute>();
                         Register(property.PropertyType, reader, fieldIndex, out var fieldExpression);
                         if (fieldExpression != null)
                         {

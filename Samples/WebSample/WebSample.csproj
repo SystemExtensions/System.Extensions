@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RazorPath>Views</RazorPath><!--OR AbsolutePath-->
-    <RazorNamespace>WebSample.Views</RazorNamespace>
+    <RazorPath>Views</RazorPath><!--OR AbsolutePath,default Project-->
+    <!--<RazorNamespace>WebSample.Views</RazorNamespace>-->
     <!--<RazorConfiguration>Debug</RazorConfiguration>-->
     <!--<RazorBaseType>MyViewBase</RazorBaseType>-->
   </PropertyGroup>

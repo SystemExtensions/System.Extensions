@@ -11,6 +11,7 @@ namespace System.Extensions.Http
         #region private
         private static Property<HttpRequest> _Response = new Property<HttpRequest>("HandlerCompiler.Response");
         private static Property<HttpRequest> _AsyncParameters = new Property<HttpRequest>("HandlerCompiler.AsyncParameters");
+        //TODO? lock()
         private Stack<Func<Type, ParameterExpression, Expression>> _handlers;
         private Stack<Func<Type, ParameterInfo, ParameterExpression, Expression>> _parameterHandlers;//clash
         private Stack<Func<Type, PropertyInfo, ParameterExpression, Expression>> _propertyHandlers;

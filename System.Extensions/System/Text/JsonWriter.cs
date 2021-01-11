@@ -3020,13 +3020,12 @@ namespace System.Text
                 {
                     if (!property.CanRead)
                         continue;
-                    var ignoreDataMemberAttribute = (IgnoreDataMemberAttribute)property.GetCustomAttribute(typeof(IgnoreDataMemberAttribute));
-                    if (ignoreDataMemberAttribute != null)
+                    if (property.IsDefined(typeof(IgnoreDataMemberAttribute)))
                         continue;
                     string propertyName = null;
                     var order = -1;
                     var emitDefaultValue = true;
-                    var dataMemberAttribute = (DataMemberAttribute)property.GetCustomAttribute(typeof(DataMemberAttribute));
+                    var dataMemberAttribute = property.GetCustomAttribute<DataMemberAttribute>();
                     if (dataMemberAttribute == null)
                     {
                         if (property.Name == "ExtensionData")
@@ -3777,7 +3776,7 @@ namespace System.Text
             });
             //format
             RegisterProperty((property, value, writer) => {
-                var dataFormatAttribute = (DataFormatAttribute)property.GetCustomAttribute(typeof(DataFormatAttribute));
+                var dataFormatAttribute = property.GetCustomAttribute<DataFormatAttribute>();
                 if (dataFormatAttribute == null)
                     return null;
 

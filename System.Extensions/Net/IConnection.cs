@@ -16,7 +16,7 @@ namespace System.Extensions.Net
         ValueTask<int> ReceiveAsync(byte[] buffer, int offset, int count);
         void Send(ReadOnlySpan<byte> buffer);
         void Send(byte[] buffer, int offset, int count);
-        Task SendAsync(ReadOnlyMemory<byte> buffer);
+        Task SendAsync(ReadOnlyMemory<byte> buffer);//TODO?? ValueTask
         Task SendAsync(byte[] buffer, int offset, int count);
         void SendFile(string fileName);
         Task SendFileAsync(string fileName);

@@ -1,14 +1,14 @@
 ﻿<Project>
   
   <PropertyGroup>
-    <RazorBinPath Condition=" '$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\bin\netcoreapp3.1\</RazorBinPath>
-    <RazorBinPath Condition=" '$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\bin\net472\</RazorBinPath>
+    <RazorBinPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\bin\netcoreapp3.1\</RazorBinPath>
+    <RazorBinPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\bin\net472\</RazorBinPath>
   </PropertyGroup>
 
   <PropertyGroup>
-    <RazorConfiguration Condition=" '$(RazorConfiguration)' == ''">$(Configuration)</RazorConfiguration>
-    <RazorNamespace Condition=" '$(RazorNamespace)' == ''">$(AssemblyName).Views</RazorNamespace>
-    <RazorBaseType Condition=" '$(RazorBaseType)' == ''">View&lt;object&gt;</RazorBaseType>
+    <RazorConfiguration Condition="'$(RazorConfiguration)' == ''">$(Configuration)</RazorConfiguration>
+    <RazorNamespace Condition="'$(RazorNamespace)' == ''">$(AssemblyName).Views</RazorNamespace>
+    <RazorBaseType Condition="'$(RazorBaseType)' == ''">View&lt;object&gt;</RazorBaseType>
     <RazorPath>$([System.IO.Path]::Combine('$(MsBuildProjectDirectory)', '$(RazorPath)'))</RazorPath>
     <!--TODO??-->
     <!--<RazorUsing>intellisense</RazorUsing>-->
