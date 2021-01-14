@@ -3,7 +3,7 @@ namespace System.Reflection
 {
     using System.Linq.Expressions;
     using System.Collections.Generic;
-    public static class Constructor
+    public static class Constructor//TODO?? Redesign(Immutable)
     {
         private static readonly object _Sync = new object();
         private static Stack<object> _Handlers;

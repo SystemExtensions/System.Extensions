@@ -170,6 +170,19 @@ namespace BasicSample
                 }
             }
 
+            //------------------------------------------------------------------------
+            //所有dynamic的默认是通过泛型<DynamicObject>
+            //The default of all dynamic is use the generic <DynamicObject>
+            //想用<dynamic> 就Register(typeof(object))
+            //If you want to use<dynamic>, 就Register(typeof(object)))
+            //JsonReader.Register(typeof(object), (reader) =>
+            //{
+            //    JsonReader.Register(typeof(DynamicObject), reader, out var expr, out _);
+            //    return expr;
+            //});
+            //dynamic obj = JsonReader.FromJson5<dynamic>("");
+            //其他地方的dynamic也一样
+            //dynamic in other is same
         }
         public class TestClass1
         {

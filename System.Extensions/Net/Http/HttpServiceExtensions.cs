@@ -1547,6 +1547,9 @@ namespace System.Extensions.Net
                 _headOnly = _request.Method == HttpMethod.Head;
                 await WriteAsync();
                 await ReadAsync();
+                //TODO? Remove
+                Debug.Assert(_response != null);
+                FeaturesExtensions.RegisterForDispose(_request, _response);
                 return _response;
             }
             public void Dispose()
@@ -2611,7 +2614,7 @@ namespace System.Extensions.Net
                 #endregion
 
                 #region RequestUri
-                requestUri://获取
+                requestUri:
                 Debug.WriteLine("parse requestUri");//TODO utf-8支持? 判断>127
                 for (_position = _start; ;)
                 {
@@ -2732,7 +2735,7 @@ namespace System.Extensions.Net
                                     {
                                         if (tempByte == _COLONByte)
                                         {
-                                            _headerName = _position - _start - 1;//获取Name索引
+                                            _headerName = _position - _start - 1;
                                             if (_readQueue != null)
                                             {
                                                 foreach ((var read, var _) in _readQueue)
@@ -2743,7 +2746,7 @@ namespace System.Extensions.Net
                                             _state = State.Colon;
                                             break;
                                         }
-                                        if (_position == _end)//数据不足
+                                        if (_position == _end)
                                             break;
                                         tempByte = _pRead[_position++];
                                     }

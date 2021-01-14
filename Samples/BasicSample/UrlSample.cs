@@ -82,7 +82,7 @@ namespace BasicSample
             //Uri=>Url
             //Unicode(Host(Idn) Path Fragment)
             var uri = new Uri("http://博客园.com/路径1/路径2?查询#片段");
-            var url13 = new Url(uri);
+            var url13 = (Url)uri;
             Console.WriteLine($"url13:{url13}");
             Console.WriteLine($"Host:{new IdnMapping().GetUnicode(url13.Host)}");
             Console.WriteLine($"Path:{Url.Decode(url13.Path)}");

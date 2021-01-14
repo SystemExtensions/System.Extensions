@@ -1191,10 +1191,10 @@ namespace System.Extensions.Http
                 for (int i = 0; i < _maxRedirections; i++)
                 {
                     if (!response.Headers.TryGetValue(HttpHeaders.Location, out var location)
-                        && !string.IsNullOrEmpty(location))
+                        || string.IsNullOrEmpty(location))
                         return response;
 
-                    if (location[0] == '/')//TODO 使用新请求?
+                    if (location[0] == '/')//TODO? new HttpRequest()
                         request.Url.AbsolutePath = location;
                     else
                         request.Url.AbsoluteUri = location;
@@ -2180,6 +2180,13 @@ namespace System.Extensions.Http
         //}
         private class TimeoutQueueClient : HttpClient
         {
+            private static Action<Task<HttpResponse>> _Continuation = (task) =>
+            {
+                if (task.IsCompletedSuccessfully)
+                {
+                    task.Result.Dispose();
+                }
+            };
             private HttpClient _client;
             private TaskTimeoutQueue<HttpResponse> _timeout;
             private TaskTimeoutQueue<int> _readTimeout;
@@ -2191,22 +2198,7 @@ namespace System.Extensions.Http
             }
             public override async Task<HttpResponse> SendAsync(HttpRequest request)
             {
-                HttpResponse response;
-                if (_timeout != null)
-                {
-                    response = await _client.SendAsync(request).Timeout(_timeout,
-                        (task) =>
-                        {
-                            if (task.IsCompletedSuccessfully)
-                            {
-                                task.Result.Dispose();
-                            }
-                        });
-                }
-                else
-                {
-                    response = await _client.SendAsync(request);
-                }
+                var response = await _client.SendAsync(request).Timeout(_timeout, _Continuation);
                 if (response.Content != null && _readTimeout != null)
                 {
                     response.Content = new TimeoutContent(response, _readTimeout);

@@ -18,17 +18,17 @@ namespace System.Extensions.Http
             _url = new Url(url);
             _headers = new HttpHeaders();
         }
-        public HttpRequest(Url baseUri, string relativeUri)
-        {
-            if (baseUri == null)
-                throw new ArgumentNullException(nameof(baseUri));
-            if (relativeUri == null)
-                throw new ArgumentNullException(nameof(baseUri));
+        //public HttpRequest(Url baseUri, string relativeUri)
+        //{
+        //    if (baseUri == null)
+        //        throw new ArgumentNullException(nameof(baseUri));
+        //    if (relativeUri == null)
+        //        throw new ArgumentNullException(nameof(baseUri));
 
-            _properties = new PropertyCollection<HttpRequest>();
-            _url = new Url(baseUri, relativeUri);
-            _headers = new HttpHeaders();
-        }
+        //    _properties = new PropertyCollection<HttpRequest>();
+        //    _url = new Url(baseUri, relativeUri);
+        //    _headers = new HttpHeaders();
+        //}
         public HttpRequest(Url url, IHttpHeaders headers)
         {
             if (url == null)

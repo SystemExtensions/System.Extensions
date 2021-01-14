@@ -201,6 +201,8 @@ namespace System.Extensions.Net
                     _socket = null;
                     if (_server._listening)
                     {
+                        _receiveArgs.CleanUp();
+                        _sendArgs.CleanUp();
                         try
                         {
                             Accept();
@@ -418,8 +420,6 @@ namespace System.Extensions.Net
                 {
                     _socket.Close();
                 }
-                _receiveArgs.Clear();
-                _sendArgs.Clear();
             }
             public void Dispose()
             {
@@ -530,7 +530,7 @@ namespace System.Extensions.Net
                 return;
 
             _listening = false;
-            //TODO
+            //TODO? Action
             _socket.Close();
             for (int i = 0; i < _connections.Length; i++)
             {

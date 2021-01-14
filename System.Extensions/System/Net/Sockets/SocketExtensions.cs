@@ -24,26 +24,24 @@ namespace System.Extensions.Net
         static SocketExtensions() 
         {
             var saea = Expression.Parameter(typeof(SocketAsyncEventArgs), "saea");
-            //TODO?? Move To Completed
-            //SetBuffer(null, 0, 0);
-            var setBuffer = typeof(SocketAsyncEventArgs).GetMethod("SetBuffer", new[] { typeof(byte[]), typeof(int), typeof(int) });
-            var setBufferExpr = Expression.Call(saea, setBuffer, Expression.Constant(null, typeof(byte[])), Expression.Constant(0), Expression.Constant(0));
+            //TODO?? SetBuffer(null, 0, 0)Move To Completed
+            //var setBuffer = typeof(SocketAsyncEventArgs).GetMethod("SetBuffer", new[] { typeof(byte[]), typeof(int), typeof(int) });
+            //HandleCompletionPortCallbackError
+            //_operating(Free = 0)TODO? SpinWait
+            var operating = typeof(SocketAsyncEventArgs).GetField("_operating", BindingFlags.NonPublic | BindingFlags.Instance);
             var currentSocket = typeof(SocketAsyncEventArgs).GetField("_currentSocket", BindingFlags.NonPublic | BindingFlags.Instance);
-            if (currentSocket != null)
-            {
-                _Clear = Expression.Lambda<Action<SocketAsyncEventArgs>>(
-                    Expression.Block(setBufferExpr, Expression.Assign(Expression.Field(saea, currentSocket), Expression.Constant(null, typeof(Socket)))), saea).Compile();
-            }
-            else
-            {
-                _Clear = Expression.Lambda<Action<SocketAsyncEventArgs>>(setBufferExpr, saea).Compile();
-            }
+            _CleanUp = Expression.Lambda<Action<SocketAsyncEventArgs>>(
+                Expression.IfThen(
+                    Expression.Equal(Expression.Field(saea, operating),Expression.Constant(0)),
+                    Expression.Assign(Expression.Field(saea, currentSocket), Expression.Constant(null, typeof(Socket)))
+                    )
+                , saea).Compile();
         }
 
-        private static Action<SocketAsyncEventArgs> _Clear;
-        public static void Clear(this SocketAsyncEventArgs @this) 
+        private static Action<SocketAsyncEventArgs> _CleanUp;
+        public static void CleanUp(this SocketAsyncEventArgs @this) 
         {
-            _Clear(@this);
+            _CleanUp(@this);
         }
     }
 }

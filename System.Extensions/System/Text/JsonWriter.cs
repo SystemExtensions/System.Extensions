@@ -3155,9 +3155,9 @@ namespace System.Text
                         Expression.Block(exprs));
                 }
             });
-            //void Write(JsonWriter)
+            //void Invoke(JsonWriter)
             Register((type, value, writer) => {
-                var write = type.GetMethod("Write", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonWriter) }, null);
+                var write = type.GetMethod("Invoke", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonWriter) }, null);
                 if (write == null)
                     return null;
 
@@ -3804,10 +3804,10 @@ namespace System.Text
                         );
                 }
             });
-            //void Write(JsonWriter,string)
+            //void Invoke(JsonWriter,string)
             RegisterProperty((type, format, value, writer) =>
             {
-                var write = type.GetMethod("Write", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonWriter), typeof(string) }, null);
+                var write = type.GetMethod("Invoke", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonWriter), typeof(string) }, null);
                 if (write == null)
                     return null;
 

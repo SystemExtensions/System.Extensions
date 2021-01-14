@@ -80,7 +80,7 @@ namespace System
         }
 
         #region const
-        private const int _MaxStackSize = 1024;
+        private const int _MaxStackSize = 2048;//TODO? static int
         public const string SchemeHttp = "http";
         public const string SchemeHttps = "https";
         public const string SchemeDelimiter = "://";//private
@@ -127,264 +127,251 @@ namespace System
             _fragment = url._fragment;
             _hostNameType = url._hostNameType;
         }
-        public Url(Url baseUri, string relativeUri)
-        {
-            if (baseUri == null)
-                throw new ArgumentNullException(nameof(baseUri));
-            if (string.IsNullOrEmpty(baseUri._scheme))
-                throw new ArgumentException("baseUri must be absolute");
+        //new Uri(baseUri, relativeUri)
+        //public Url(Url baseUri, string relativeUri)
+        //{
+        //    if (baseUri == null)
+        //        throw new ArgumentNullException(nameof(baseUri));
+        //    if (string.IsNullOrEmpty(baseUri._scheme))
+        //        throw new ArgumentException("baseUri must be absolute");
 
-            if (string.IsNullOrEmpty(relativeUri))
-            {
-                _scheme = baseUri._scheme;
-                _userInfo = baseUri._userInfo;
-                _host = baseUri._host;
-                _hostNameType = baseUri._hostNameType;
-                _port = baseUri._port;
-                _path = baseUri._path;
-                _query = baseUri._query;
-            }
-            else if (relativeUri[0] == '/')
-            {
-                if (relativeUri.Length > 1 && relativeUri[1] == '/')
-                {
-                    _scheme = baseUri._scheme;
-                    ParseSchemePart(relativeUri.AsSpan(2));
-                }
-                else
-                {
-                    _scheme = baseUri._scheme;
-                    _userInfo = baseUri._userInfo;
-                    _host = baseUri._host;
-                    _hostNameType = baseUri._hostNameType;
-                    _port = baseUri._port;
-                    var queryIndex = -1;
-                    var fragmentIndex = -1;
-                    for (int i = 1; i < relativeUri.Length; i++)
-                    {
-                        char temp = relativeUri[i];
-                        if (temp > byte.MaxValue || temp <= ' ' || temp == 127)
-                            throw new FormatException(nameof(relativeUri));
+        //    if (string.IsNullOrEmpty(relativeUri))
+        //    {
+        //        _scheme = baseUri._scheme;
+        //        _userInfo = baseUri._userInfo;
+        //        _host = baseUri._host;
+        //        _hostNameType = baseUri._hostNameType;
+        //        _port = baseUri._port;
+        //        _path = baseUri._path;
+        //        _query = baseUri._query;
+        //    }
+        //    else if (relativeUri[0] == '/')
+        //    {
+        //        if (relativeUri.Length > 1 && relativeUri[1] == '/')
+        //        {
+        //            _scheme = baseUri._scheme;
+        //            ParseSchemePart(relativeUri.AsSpan(2));
+        //        }
+        //        else
+        //        {
+        //            _scheme = baseUri._scheme;
+        //            _userInfo = baseUri._userInfo;
+        //            _host = baseUri._host;
+        //            _hostNameType = baseUri._hostNameType;
+        //            _port = baseUri._port;
+        //            var queryIndex = -1;
+        //            var fragmentIndex = -1;
+        //            for (int i = 1; i < relativeUri.Length; i++)
+        //            {
+        //                char temp = relativeUri[i];
+        //                if (temp > byte.MaxValue || temp <= ' ' || temp == 127)
+        //                    throw new FormatException(nameof(relativeUri));
 
-                        if (temp == '?')
-                        {
-                            if (queryIndex == -1)
-                                queryIndex = i;
-                        }
-                        else if (temp == '#')
-                        {
-                            if (queryIndex == -1)
-                                queryIndex = -2;
-                            if (fragmentIndex == -1)
-                                fragmentIndex = i;
-                        }
-                    }
-                    if (queryIndex > 0)
-                    {
-                        _path = relativeUri.Substring(0, queryIndex);
-                        if (fragmentIndex > 0)
-                        {
-                            _query = relativeUri.Substring(queryIndex, fragmentIndex - queryIndex);
-                            _fragment = relativeUri.Substring(fragmentIndex);
-                        }
-                        else
-                        {
-                            _query = relativeUri.Substring(queryIndex);
-                        }
-                    }
-                    else if (fragmentIndex > 0)
-                    {
-                        _path = relativeUri.Substring(0, fragmentIndex);
-                        _fragment = relativeUri.Substring(fragmentIndex);
-                    }
-                    else
-                    {
-                        _path = relativeUri;
-                    }
-                }
-            }
-            else if (relativeUri[0] == '?')
-            {
-                _scheme = baseUri._scheme;
-                _userInfo = baseUri._userInfo;
-                _host = baseUri._host;
-                _hostNameType = baseUri._hostNameType;
-                _port = baseUri._port;
-                _path = baseUri._path;
-                var fragmentIndex = relativeUri.IndexOf('#');
-                if (fragmentIndex == -1)
-                {
-                    if (!IsQuery(relativeUri))
-                        throw new FormatException(nameof(relativeUri));
-                    _query = relativeUri;
-                }
-                else
-                {
-                    var query = relativeUri.AsSpan(0, fragmentIndex);
-                    if (!IsQuery(query))
-                        throw new FormatException(nameof(relativeUri));
-                    _query = new string(query);
-                    var fragment = relativeUri.AsSpan(fragmentIndex);
-                    if (!IsFragment(fragment))
-                        throw new FormatException(nameof(relativeUri));
-                    _fragment = new string(fragment);
-                }
-            }
-            else if (relativeUri[0] == '#')
-            {
-                _scheme = baseUri._scheme;
-                _userInfo = baseUri._userInfo;
-                _host = baseUri._host;
-                _hostNameType = baseUri._hostNameType;
-                _port = baseUri._port;
-                _path = baseUri._path;
-                _query = baseUri._query;
-                if (!IsFragment(relativeUri))
-                    throw new FormatException(nameof(relativeUri));
-                _fragment = relativeUri;
-            }
-            else
-            {
-                var schemeIndex = relativeUri.IndexOf(SchemeDelimiter);
-                if (schemeIndex > 0)
-                {
-                    var scheme = relativeUri.AsSpan(0, schemeIndex);
-                    if (IsScheme(scheme))
-                    {
-                        _scheme = new string(scheme);
-                        ParseSchemePart(relativeUri.AsSpan(schemeIndex + 3));
-                        return;
-                    }
-                }
-                _scheme = baseUri._scheme;
-                _userInfo = baseUri._userInfo;
-                _host = baseUri._host;
-                _hostNameType = baseUri._hostNameType;
-                _port = baseUri._port;
-                var absPath = string.IsNullOrEmpty(baseUri._path) ?
-                    '/' + relativeUri : baseUri._path[baseUri._path.Length - 1] == '/'
-                    ? baseUri._path + relativeUri : baseUri._path + '/' + relativeUri;
+        //                if (temp == '?')
+        //                {
+        //                    if (queryIndex == -1)
+        //                        queryIndex = i;
+        //                }
+        //                else if (temp == '#')
+        //                {
+        //                    if (queryIndex == -1)
+        //                        queryIndex = -2;
+        //                    if (fragmentIndex == -1)
+        //                        fragmentIndex = i;
+        //                }
+        //            }
+        //            if (queryIndex > 0)
+        //            {
+        //                _path = relativeUri.Substring(0, queryIndex);
+        //                if (fragmentIndex > 0)
+        //                {
+        //                    _query = relativeUri.Substring(queryIndex, fragmentIndex - queryIndex);
+        //                    _fragment = relativeUri.Substring(fragmentIndex);
+        //                }
+        //                else
+        //                {
+        //                    _query = relativeUri.Substring(queryIndex);
+        //                }
+        //            }
+        //            else if (fragmentIndex > 0)
+        //            {
+        //                _path = relativeUri.Substring(0, fragmentIndex);
+        //                _fragment = relativeUri.Substring(fragmentIndex);
+        //            }
+        //            else
+        //            {
+        //                _path = relativeUri;
+        //            }
+        //        }
+        //    }
+        //    else if (relativeUri[0] == '?')
+        //    {
+        //        _scheme = baseUri._scheme;
+        //        _userInfo = baseUri._userInfo;
+        //        _host = baseUri._host;
+        //        _hostNameType = baseUri._hostNameType;
+        //        _port = baseUri._port;
+        //        _path = baseUri._path;
+        //        var fragmentIndex = relativeUri.IndexOf('#');
+        //        if (fragmentIndex == -1)
+        //        {
+        //            if (!IsQuery(relativeUri))
+        //                throw new FormatException(nameof(relativeUri));
+        //            _query = relativeUri;
+        //        }
+        //        else
+        //        {
+        //            var query = relativeUri.AsSpan(0, fragmentIndex);
+        //            if (!IsQuery(query))
+        //                throw new FormatException(nameof(relativeUri));
+        //            _query = new string(query);
+        //            var fragment = relativeUri.AsSpan(fragmentIndex);
+        //            if (!IsFragment(fragment))
+        //                throw new FormatException(nameof(relativeUri));
+        //            _fragment = new string(fragment);
+        //        }
+        //    }
+        //    else if (relativeUri[0] == '#')
+        //    {
+        //        _scheme = baseUri._scheme;
+        //        _userInfo = baseUri._userInfo;
+        //        _host = baseUri._host;
+        //        _hostNameType = baseUri._hostNameType;
+        //        _port = baseUri._port;
+        //        _path = baseUri._path;
+        //        _query = baseUri._query;
+        //        if (!IsFragment(relativeUri))
+        //            throw new FormatException(nameof(relativeUri));
+        //        _fragment = relativeUri;
+        //    }
+        //    else
+        //    {
+        //        var schemeIndex = relativeUri.IndexOf(SchemeDelimiter);
+        //        if (schemeIndex > 0)
+        //        {
+        //            var scheme = relativeUri.AsSpan(0, schemeIndex);
+        //            if (IsScheme(scheme))
+        //            {
+        //                _scheme = new string(scheme);
+        //                ParseSchemePart(relativeUri.AsSpan(schemeIndex + 3));
+        //                return;
+        //            }
+        //        }
+        //        _scheme = baseUri._scheme;
+        //        _userInfo = baseUri._userInfo;
+        //        _host = baseUri._host;
+        //        _hostNameType = baseUri._hostNameType;
+        //        _port = baseUri._port;
+        //        var absPath = string.IsNullOrEmpty(baseUri._path) ?
+        //            '/' + relativeUri : baseUri._path[baseUri._path.Length - 1] == '/'
+        //            ? baseUri._path + relativeUri : baseUri._path + '/' + relativeUri;
 
-                var queryIndex = -1;
-                var fragmentIndex = -1;
-                for (int i = 1; i < absPath.Length; i++)
-                {
-                    char temp = absPath[i];
-                    if (temp > byte.MaxValue || temp <= ' ' || temp == 127)
-                        throw new FormatException(nameof(relativeUri));
+        //        var queryIndex = -1;
+        //        var fragmentIndex = -1;
+        //        for (int i = 1; i < absPath.Length; i++)
+        //        {
+        //            char temp = absPath[i];
+        //            if (temp > byte.MaxValue || temp <= ' ' || temp == 127)
+        //                throw new FormatException(nameof(relativeUri));
 
-                    if (temp == '?')
-                    {
-                        if (queryIndex == -1)
-                            queryIndex = i;
-                    }
-                    else if (temp == '#')
-                    {
-                        if (queryIndex == -1)
-                            queryIndex = -2;
-                        if (fragmentIndex == -1)
-                            fragmentIndex = i;
-                    }
-                }
-                ReadOnlySpan<char> path;
-                if (queryIndex > 0)
-                {
-                    path = absPath.AsSpan(0, queryIndex);
-                    if (fragmentIndex > 0)
-                    {
-                        _query = absPath.Substring(queryIndex, fragmentIndex - queryIndex);
-                        _fragment = absPath.Substring(fragmentIndex);
-                    }
-                    else
-                    {
-                        _query = absPath.Substring(queryIndex);
-                    }
-                }
-                else if (fragmentIndex > 0)
-                {
-                    path = absPath.AsSpan(0, fragmentIndex);
-                    _fragment = absPath.Substring(fragmentIndex);
-                }
-                else
-                {
-                    path = absPath;
-                }
-                //Relative path conversion
-                var segments = new (int, int)[4];
-                var index = 0;
-                var offset = 0;
-                for (int i = 1; i < path.Length; i++)
-                {
-                    if (path[i] == '/')
-                    {
-                        var segment = path.Slice(offset, i - offset);
-                        if (segment.SequenceEqual("/."))
-                        {
-                            offset = i;
-                        }
-                        else if (segment.SequenceEqual("/.."))
-                        {
-                            if (index > 0)
-                                index -= 1;
-                            offset = i;
-                        }
-                        else
-                        {
-                            if (index == segments.Length)
-                                Array.Resize(ref segments, segments.Length * 2);
+        //            if (temp == '?')
+        //            {
+        //                if (queryIndex == -1)
+        //                    queryIndex = i;
+        //            }
+        //            else if (temp == '#')
+        //            {
+        //                if (queryIndex == -1)
+        //                    queryIndex = -2;
+        //                if (fragmentIndex == -1)
+        //                    fragmentIndex = i;
+        //            }
+        //        }
+        //        ReadOnlySpan<char> path;
+        //        if (queryIndex > 0)
+        //        {
+        //            path = absPath.AsSpan(0, queryIndex);
+        //            if (fragmentIndex > 0)
+        //            {
+        //                _query = absPath.Substring(queryIndex, fragmentIndex - queryIndex);
+        //                _fragment = absPath.Substring(fragmentIndex);
+        //            }
+        //            else
+        //            {
+        //                _query = absPath.Substring(queryIndex);
+        //            }
+        //        }
+        //        else if (fragmentIndex > 0)
+        //        {
+        //            path = absPath.AsSpan(0, fragmentIndex);
+        //            _fragment = absPath.Substring(fragmentIndex);
+        //        }
+        //        else
+        //        {
+        //            path = absPath;
+        //        }
+        //        //Relative path conversion
+        //        var segments = new (int, int)[4];
+        //        var index = 0;
+        //        var offset = 0;
+        //        for (int i = 1; i < path.Length; i++)
+        //        {
+        //            if (path[i] == '/')
+        //            {
+        //                var segment = path.Slice(offset, i - offset);
+        //                if (segment.SequenceEqual("/."))
+        //                {
+        //                    offset = i;
+        //                }
+        //                else if (segment.SequenceEqual("/.."))
+        //                {
+        //                    if (index > 0)
+        //                        index -= 1;
+        //                    offset = i;
+        //                }
+        //                else
+        //                {
+        //                    if (index == segments.Length)
+        //                        Array.Resize(ref segments, segments.Length * 2);
 
-                            segments[index++] = (offset, i - offset);
-                            offset = i;
-                        }
-                    }
-                }
-                var last = path.Slice(offset);
-                if (last.SequenceEqual("/."))
-                {
-                    last = "/";
-                }
-                else if (last.SequenceEqual("/.."))
-                {
-                    if (index > 0)
-                        index -= 1;
-                    last = "/";
-                }
-                var length = last.Length;
-                for (int i = 0; i < index; i++)
-                {
-                    length += segments[i].Item2;
-                }
-                _path = new string('\0', length);
-                unsafe
-                {
-                    fixed (char* pData = _path)
-                    {
-                        var span = new Span<char>(pData, length);
-                        for (int i = 0; i < index; i++)
-                        {
-                            var (startIndex, count) = segments[i];
-                            path.Slice(startIndex, count).CopyTo(span);
-                            span = span.Slice(count);
-                        }
-                        last.CopyTo(span);
-                    }
-                }
-            }
-        }
-        public Url(Uri uri)
-        {
-            if (uri == null)
-                throw new ArgumentNullException(nameof(uri));
-
-            _scheme = uri.Scheme;
-            _userInfo = uri.UserInfo;
-            _host = uri.IdnHost;
-            _port = uri.IsDefaultPort ? null : (int?)uri.Port;
-            _path = uri.AbsolutePath;
-            _query = uri.Query;
-            _fragment = uri.Fragment;
-            _hostNameType = uri.HostNameType;
-        }
+        //                    segments[index++] = (offset, i - offset);
+        //                    offset = i;
+        //                }
+        //            }
+        //        }
+        //        var last = path.Slice(offset);
+        //        if (last.SequenceEqual("/."))
+        //        {
+        //            last = "/";
+        //        }
+        //        else if (last.SequenceEqual("/.."))
+        //        {
+        //            if (index > 0)
+        //                index -= 1;
+        //            last = "/";
+        //        }
+        //        var length = last.Length;
+        //        for (int i = 0; i < index; i++)
+        //        {
+        //            length += segments[i].Item2;
+        //        }
+        //        _path = new string('\0', length);
+        //        unsafe
+        //        {
+        //            fixed (char* pData = _path)
+        //            {
+        //                var span = new Span<char>(pData, length);
+        //                for (int i = 0; i < index; i++)
+        //                {
+        //                    var (startIndex, count) = segments[i];
+        //                    path.Slice(startIndex, count).CopyTo(span);
+        //                    span = span.Slice(count);
+        //                }
+        //                last.CopyTo(span);
+        //            }
+        //        }
+        //    }
+        //}
         public string Scheme
         {
             get
@@ -393,6 +380,11 @@ namespace System
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                {
+                    _scheme = value;
+                    return;
+                }
                 if (!IsScheme(value))
                     throw new ArgumentException(nameof(Scheme));
 
@@ -407,6 +399,11 @@ namespace System
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                {
+                    _userInfo = value;
+                    return;
+                }
                 if (!IsUserInfo(value))
                     throw new ArgumentException(nameof(UserInfo));
 
@@ -457,6 +454,11 @@ namespace System
             get { return _port; }
             set
             {
+                if (value == null)
+                {
+                    _port = null;
+                    return;
+                }
                 if (value < IPEndPoint.MinPort || value > IPEndPoint.MaxPort)
                     throw new ArgumentOutOfRangeException(nameof(Port));
 
@@ -1353,7 +1355,7 @@ namespace System
                     var sb = StringExtensions.ThreadRent(out var disposable);
                     try
                     {
-                        sb.Write(pSrc, encodeIndex);
+                        sb.Write(new ReadOnlySpan<char>(pSrc, encodeIndex));
                         for (int i = encodeIndex; i < length; i++)
                         {
                             var temp = pSrc[i];
@@ -1453,7 +1455,7 @@ namespace System
                     var sb = StringExtensions.ThreadRent(out var disposable);
                     try
                     {
-                        sb.Write(pSrc, encodeIndex);
+                        sb.Write(new ReadOnlySpan<char>(pSrc, encodeIndex));
                         for (int i = encodeIndex; i < length; i++)
                         {
                             var temp = pSrc[i];
@@ -1545,7 +1547,7 @@ namespace System
                     }
                     if (encodeIndex == -1)
                     {
-                        output.Write(pSrc, length);
+                        output.Write(new ReadOnlySpan<char>(pSrc, length));
                         return;
                     }
                     var byteCount = encoding.GetMaxByteCount(length - encodeIndex);
@@ -1553,7 +1555,7 @@ namespace System
                         byteCount = _MaxStackSize;
                     var bytes = stackalloc byte[byteCount];
                     var encoder = encoding.GetEncoder();
-                    output.Write(pSrc, encodeIndex);
+                    output.Write(new ReadOnlySpan<char>(pSrc, encodeIndex));
                     for (int i = encodeIndex; i < length; i++)
                     {
                         var temp = pSrc[i];
@@ -1633,7 +1635,7 @@ namespace System
             {
                 unsafe
                 {
-                    var byteCount = encoding.GetMaxByteCount(length);//TODO?放在循环内//in the loop
+                    var byteCount = encoding.GetMaxByteCount(length);//TODO? in the loop
                     if (byteCount > _MaxStackSize)
                         byteCount = _MaxStackSize;
                     var bytes = stackalloc byte[byteCount];
@@ -1654,10 +1656,10 @@ namespace System
                             }
                             if (encodeIndex == -1)
                             {
-                                sb.Write(pSrc, segmLength);
+                                sb.Write(new ReadOnlySpan<char>(pSrc, segmLength));
                                 continue;
                             }
-                            sb.Write(pSrc, encodeIndex);
+                            sb.Write(new ReadOnlySpan<char>(pSrc, encodeIndex));
                             for (int i = encodeIndex; i < segmLength; i++)
                             {
                                 var temp = pSrc[i];
@@ -2451,5 +2453,30 @@ namespace System
                 }
             }
         }
+
+        #region Url <=> Uri
+        public static implicit operator Url(Uri uri)
+        {
+            if (uri == null)
+                return null;
+            var @this = new Url();
+            @this._scheme = uri.Scheme;
+            @this._userInfo = uri.UserInfo;
+            @this._host = uri.IdnHost;
+            @this._port = uri.IsDefaultPort ? null : (int?)uri.Port;
+            @this._path = uri.AbsolutePath;
+            @this._query = uri.Query;
+            @this._fragment = uri.Fragment;
+            @this._hostNameType = uri.HostNameType;
+            return @this;
+        }
+
+        public static implicit operator Uri(Url @this)
+        {
+            if (@this == null)
+                return null;
+            return new Uri(@this.AbsoluteUri);//TODO? Reflection
+        }
+        #endregion
     }
 }

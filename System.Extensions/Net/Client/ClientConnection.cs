@@ -348,8 +348,7 @@ namespace System.Extensions.Net
                         {
                             socket.Close();
                         }
-                        _receiveArgs.Clear();
-                        _sendArgs.Clear();
+                        //TODO?? CleanUp
                     }
                 }
             }

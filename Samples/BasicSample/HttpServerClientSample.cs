@@ -328,6 +328,29 @@ namespace BasicSample
         }
 
 
+        private static HttpClient _Client19 = HttpClient.Default;
+        private static HttpClient _Client20 = HttpClient.CreateHttp("::1", 9199, 2);
+        private static HttpClient _Client21 = HttpClient.CreateHttp("127.0.0.1", 9199, 2);
+        public static void RunIPv6()
+        {
+            var httpSvr = new TcpServer("::", 9199);
+            httpSvr.Socket.DualMode = true;
+            //IPv6Only
+            //httpSvr.Socket.DualMode = false;
+            httpSvr.UseHttp((options, router) => {
+                MapRouter(router);
+            });
+            httpSvr.Start();
+
+            Run(_Client19, "http://[::1]:9199").Wait();
+            Run(_Client20, "http://[::1]:9199").Wait();
+
+
+            Run(_Client19, "http://127.0.0.1:9199").Wait();
+            Run(_Client21, "http://127.0.0.1:9199").Wait();
+        }
+
+
         private static void MapRouter(HttpRouter router)
         {
             router.MapGet("/", (req, resp) => {

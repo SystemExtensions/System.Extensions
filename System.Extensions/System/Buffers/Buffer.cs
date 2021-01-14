@@ -12,7 +12,7 @@ namespace System.Buffers
         public abstract void Advance(int count);
         public abstract void Write(T value);
         public abstract void Write(ReadOnlySpan<T> value);
-        public unsafe abstract void Write(T* pValue, int count);//TODO?? Remove
+        //public unsafe abstract void Write(T* pValue, int count);//TODO?? Remove
         public abstract void Clear();
         public abstract void CopyTo(Span<T> destination);
         public override string ToString()
@@ -218,28 +218,28 @@ namespace System.Buffers
                     }
                 }
             }
-            public override unsafe void Write(T* pValue, int count)
-            {
-                if (count <= 0)
-                    return;
+            //public override unsafe void Write(T* pValue, int count)
+            //{
+            //    if (count <= 0)
+            //        return;
 
-                var pData = pValue;
-                var tempCount = count;
-                do
-                {
-                    TryAlloc(tempCount);
-                    var charsToCopy = tempCount < _available ? tempCount : _available;
-                    fixed (T* pDest = _array)
-                    {
-                        var toCopy = charsToCopy * BufferExtensions.SizeOf<T>();
-                        Buffer.MemoryCopy(pData, pDest + (_array.Length - _available), toCopy, toCopy);
-                    }
-                    pData += charsToCopy;
-                    tempCount -= charsToCopy;
-                    _available -= charsToCopy;
-                }
-                while (tempCount > 0);
-            }
+            //    var pData = pValue;
+            //    var tempCount = count;
+            //    do
+            //    {
+            //        TryAlloc(tempCount);
+            //        var charsToCopy = tempCount < _available ? tempCount : _available;
+            //        fixed (T* pDest = _array)
+            //        {
+            //            var toCopy = charsToCopy * BufferExtensions.SizeOf<T>();
+            //            Buffer.MemoryCopy(pData, pDest + (_array.Length - _available), toCopy, toCopy);
+            //        }
+            //        pData += charsToCopy;
+            //        tempCount -= charsToCopy;
+            //        _available -= charsToCopy;
+            //    }
+            //    while (tempCount > 0);
+            //}
             public override void Clear()
             {
                 _array = _buffer;
@@ -395,28 +395,28 @@ namespace System.Buffers
                     }
                 }
             }
-            public override unsafe void Write(T* pValue, int count)
-            {
-                if (count <= 0)
-                    return;
+            //public override unsafe void Write(T* pValue, int count)
+            //{
+            //    if (count <= 0)
+            //        return;
 
-                var pData = pValue;
-                var tempCount = count;
-                do
-                {
-                    TryAlloc(tempCount);
-                    var charsToCopy = tempCount < _available ? tempCount : _available;
-                    fixed (T* pDest = _array)
-                    {
-                        var toCopy = charsToCopy * BufferExtensions.SizeOf<T>();
-                        Buffer.MemoryCopy(pData, pDest + (_array.Length - _available), toCopy, toCopy);
-                    }
-                    pData += charsToCopy;
-                    tempCount -= charsToCopy;
-                    _available -= charsToCopy;
-                }
-                while (tempCount > 0);
-            }
+            //    var pData = pValue;
+            //    var tempCount = count;
+            //    do
+            //    {
+            //        TryAlloc(tempCount);
+            //        var charsToCopy = tempCount < _available ? tempCount : _available;
+            //        fixed (T* pDest = _array)
+            //        {
+            //            var toCopy = charsToCopy * BufferExtensions.SizeOf<T>();
+            //            Buffer.MemoryCopy(pData, pDest + (_array.Length - _available), toCopy, toCopy);
+            //        }
+            //        pData += charsToCopy;
+            //        tempCount -= charsToCopy;
+            //        _available -= charsToCopy;
+            //    }
+            //    while (tempCount > 0);
+            //}
             public override void Clear()
             {
                 _array = _buffer;

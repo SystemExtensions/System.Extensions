@@ -21,6 +21,7 @@ namespace BasicSample
             //HttpServerClientSample.RunGateway();
             //HttpServerClientSample.RunUnixDomainSocket();
             //HttpServerClientSample.RunParallelClient();
+            //HttpServerClientSample.RunIPv6();
 
 
             //HttpProxySample.RunHttp();

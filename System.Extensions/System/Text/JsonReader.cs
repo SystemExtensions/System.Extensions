@@ -15835,7 +15835,7 @@ namespace System.Text
                 }
                 return base.TryInvokeMember(binder, args, out result);
             }
-            public void Write(JsonWriter writer)
+            public void Invoke(JsonWriter writer)
             {
                 switch (_valueType)
                 {
@@ -15845,7 +15845,7 @@ namespace System.Text
                             writer.WriteStartArray();
                             foreach (var item in value)
                             {
-                                item.Write(writer);
+                                item.Invoke(writer);
                             }
                             writer.WriteEndArray();
                             return;
@@ -15857,7 +15857,7 @@ namespace System.Text
                             foreach (var item in value)
                             {
                                 writer.WriteProperty(item.Key);
-                                item.Value.Write(writer);
+                                item.Value.Invoke(writer);
                             }
                             writer.WriteEndObject();
                             return;
@@ -16186,9 +16186,9 @@ namespace System.Text
                     Expression.Call(register.MakeGenericMethod(type), handler),
                     Expression.Invoke(handler, reader));
             });
-            //void Read(JsonReader)
+            //void Invoke(JsonReader)
             Register((type, value, reader) => {
-                var read = type.GetMethod("Read", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonReader) }, null);
+                var read = type.GetMethod("Invoke", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonReader) }, null);
                 if (read == null)
                     return null;
 
@@ -16988,10 +16988,10 @@ namespace System.Text
 
                 return Expression.Assign(Expression.Property(value, property), expression);
             });
-            //void Read(JsonReader,string)
+            //void Invoke(JsonReader,string)
             RegisterProperty(propertyFormat: (type, format, reader) =>
             {
-                var read = type.GetMethod("Read", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonReader), typeof(string) }, null);
+                var read = type.GetMethod("Invoke", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance, null, new[] { typeof(JsonReader), typeof(string) }, null);
                 if (read == null)
                     return null;
 

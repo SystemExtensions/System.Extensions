@@ -5436,7 +5436,7 @@ namespace System.Extensions.Http
                 }
                 public void Active(RequestTask requestTask)
                 {
-                    Debug.WriteLine("开始激活");
+                    Debug.WriteLine("Active");
                     Debug.Assert(requestTask != null);
                     Debug.Assert(Monitor.IsEntered(_client));
                     Debug.Assert(Monitor.IsEntered(this));
@@ -5455,7 +5455,6 @@ namespace System.Extensions.Http
                         try
                         {
                             await _connection.OpenAsync();
-                            Debug.WriteLine("连接打开");
                             var writeTask = new Task<Task>(() => WriteAsync());
                             var readTask = new Task<Task>(() => ReadAsync());
                             _writeTask = writeTask.Unwrap();
@@ -5625,7 +5624,6 @@ namespace System.Extensions.Http
             private async Task<HttpResponse> SendHttp2Async(Authority key, HttpRequest request)
             {
                 Debug.Assert(request.Version == HttpVersion.Version20);
-
                 if (!_http2.TryGetValue(key, out var http2))
                 {
                     lock (_http2Sync)
@@ -5765,30 +5763,7 @@ namespace System.Extensions.Http
             public override EndPoint RemoteEndPoint => _connection.RemoteEndPoint;
             public override void Open()
             {
-                var request = new HttpRequest();
-                request.Method = HttpMethod.Connect;
-                request.Url.Host = _host;
-                request.Url.Port = _port;
-                request.Version = HttpVersion.Version11;
-                var response = default(HttpResponse);
-                _connection.Open();
-                try
-                {
-                    response = _connection.SendAsync(request).Result;
-                    if (response.StatusCode == 200)
-                    {
-                        response.Content.DrainAsync().Wait();
-                    }
-                    else
-                    {
-                        throw new NotSupportedException($"{response.StatusCode}:{response.ReasonPhrase}");
-                    }
-                }
-                finally
-                {
-                    request.Dispose();
-                    response.Dispose();
-                }
+                OpenAsync().Wait();
             }
             public override async Task OpenAsync()
             {
@@ -5797,13 +5772,12 @@ namespace System.Extensions.Http
                 request.Url.Host = _host;
                 request.Url.Port = _port;
                 request.Version = HttpVersion.Version11;
-                //Headers
-                var response = default(HttpResponse);
+                //TODO Headers
                 await _connection.OpenAsync();
                 try
                 {
-                    response = await _connection.SendAsync(request);
-                    if (response.StatusCode == 200)
+                    var response = await _connection.SendAsync(request);
+                    if (response.StatusCode == 200)//20x
                     {
                         await response.Content.DrainAsync();
                     }
@@ -5815,7 +5789,6 @@ namespace System.Extensions.Http
                 finally
                 {
                     request.Dispose();
-                    response.Dispose();
                 }
             }
             public override int Receive(Span<byte> buffer) => _connection.Receive(buffer);
