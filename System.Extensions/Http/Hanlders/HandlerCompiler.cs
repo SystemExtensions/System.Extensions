@@ -42,7 +42,6 @@ namespace System.Extensions.Http
                     }
                     request.Properties[_AsyncParameters] = asyncParameters;
                 }
-
                 _handler(request);
                 return response;
             }
@@ -481,6 +480,39 @@ namespace System.Extensions.Http
                 }
             }
         }
+        public void RegisterParameter<T>(T value)
+        {
+            RegisterParameter((type, parameter, request) => {
+                if (type != typeof(T))
+                    return null;
+
+                return Expression.Constant(value, typeof(T));
+            });
+        }
+        public void RegisterParameter<T>(Func<HttpRequest, T> handler)
+        {
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            RegisterParameter((type, parameter, request) => {
+                if (type != typeof(T))
+                    return null;
+
+                return Expression.Invoke(Expression.Constant(handler), request);
+            });
+        }
+        public void RegisterParameterAsync<T>(Func<HttpRequest, Task<object>> handler)
+        {
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            RegisterParameter((type, parameter, request) => {
+                if (type != typeof(T))
+                    return null;
+
+                return Expression.Invoke(Expression.Constant(handler), request);
+            });
+        }
         public void RegisterParameter<T>(Predicate<ParameterInfo> predicate, T value)
         {
             if (predicate == null)
@@ -490,7 +522,7 @@ namespace System.Extensions.Http
                 if (type != typeof(T) || !predicate(parameter))
                     return null;
 
-                return Expression.Constant(value);
+                return Expression.Constant(value, typeof(T));
             });
         }
         public void RegisterParameter<T>(Predicate<ParameterInfo> predicate, Func<HttpRequest, T> handler)
@@ -571,6 +603,39 @@ namespace System.Extensions.Http
                 }
             }
         }
+        public void RegisterProperty<T>(T value)
+        {
+            RegisterProperty((type, property, request) => {
+                if (type != typeof(T))
+                    return null;
+
+                return Expression.Constant(value, typeof(T));
+            });
+        }
+        public void RegisterProperty<T>(Func<HttpRequest, T> handler)
+        {
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            RegisterProperty((type, property, request) => {
+                if (type != typeof(T))
+                    return null;
+
+                return Expression.Invoke(Expression.Constant(handler), request);
+            });
+        }
+        public void RegisterPropertyAsync<T>(Func<HttpRequest, Task<object>> handler)
+        {
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            RegisterProperty((type, property, request) => {
+                if (type != typeof(T))
+                    return null;
+
+                return Expression.Invoke(Expression.Constant(handler), request);
+            });
+        }
         public void RegisterProperty<T>(Predicate<PropertyInfo> predicate, T value)
         {
             if (predicate == null)
@@ -580,7 +645,7 @@ namespace System.Extensions.Http
                 if (type != typeof(T) || !predicate(property))
                     return null;
 
-                return Expression.Constant(value);
+                return Expression.Constant(value, typeof(T));
             });
         }
         public void RegisterProperty<T>(Predicate<PropertyInfo> predicate, Func<HttpRequest, T> handler)

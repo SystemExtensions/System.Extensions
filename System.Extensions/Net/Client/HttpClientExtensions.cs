@@ -584,7 +584,7 @@ namespace System.Extensions.Http
             }
             return @this;
         }
-
+        //TODO??? Use(options=>options.UseCookie().UseRedirect().UseTimeout())
         public static HttpClient Use(this HttpClient @this, Func<HttpRequest, HttpClient, Task<HttpResponse>> handler)
         {
             if (@this == null)
@@ -620,11 +620,20 @@ namespace System.Extensions.Http
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
 
-            return new CookieClient(@this);
+            return new CookieClient(@this, null);
+        }
+        public static HttpClient UseCookie(this HttpClient @this,IList<string> setCookies)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (setCookies == null)
+                throw new ArgumentNullException(nameof(setCookies));
+
+            return new CookieClient(@this, setCookies);
         }
         public static HttpClient UseRedirect(this HttpClient @this)
         {
-            return UseRedirect(@this, 8);
+            return UseRedirect(@this, 4);
         }
         public static HttpClient UseRedirect(this HttpClient @this, int maxRedirections)
         {
@@ -645,29 +654,6 @@ namespace System.Extensions.Http
             if (acceptEncodings == null || acceptEncodings.Length == 0)
                 return @this;
 
-            //WebServer send request br but response gzip
-            //var gzip = false;
-            //var deflate = false;
-            //var br = false;
-            //for (int i = 0; i < acceptEncodings.Length; i++)
-            //{
-            //    if (acceptEncodings[i].EqualsIgnoreCase("gzip"))
-            //    {
-            //        gzip = true;
-            //    }
-            //    else if (acceptEncodings[i].EqualsIgnoreCase("deflate"))
-            //    {
-            //        deflate = true;
-            //    }
-            //    else if (acceptEncodings[i].EqualsIgnoreCase("br"))
-            //    {
-            //        br = true;
-            //    }
-            //    else
-            //    {
-            //        throw new NotSupportedException(acceptEncodings[i]);
-            //    }
-            //}
             var acceptEncoding = string.Join(", ", acceptEncodings);
             return @this.Use(async (request, client) =>
             {
@@ -955,7 +941,7 @@ namespace System.Extensions.Http
                     }
                 }
             }
-            public CookieClient(HttpClient client)
+            public CookieClient(HttpClient client,IList<string> setCookies)
             {
                 //TODO?
                 //使用Timer缓存CookieHeader
@@ -968,7 +954,34 @@ namespace System.Extensions.Http
                 //不设置cookie 最大项了
 
                 _client = client;
-                _container = new ConcurrentDictionary<string, List<Cookie>>(StringComparer.OrdinalIgnoreCase);//CopyOnWrite
+                _container = new ConcurrentDictionary<string, List<Cookie>>(StringComparer.OrdinalIgnoreCase);//?CopyOnWrite
+                if (setCookies != null) 
+                {
+                    foreach (var setCookie in setCookies)
+                    {
+                        if (Cookie.TryParse(setCookie, out var cookie))
+                        {
+                            if (string.IsNullOrEmpty(cookie.Domain))
+                                throw new ArgumentException("Domain");
+
+                            if (string.IsNullOrEmpty(cookie.Path))
+                                cookie.Path = "/";
+
+                            if (_container.TryGetValue(cookie.Domain, out var cookies))
+                            {
+                                cookies.Add(cookie);
+                            }
+                            else 
+                            {
+                                _container.TryAdd(cookie.Domain, new List<Cookie>() { cookie });
+                            }
+                        }
+                        else 
+                        {
+                            throw new ArgumentException("SetCookie");
+                        }
+                    }
+                }
             }
 
             private HttpClient _client;
@@ -980,7 +993,7 @@ namespace System.Extensions.Http
                 if (string.IsNullOrEmpty(host))
                     throw new ArgumentException("url must have host");
                 var domain = request.Url.Domain;
-                if (string.IsNullOrEmpty(domain))//hostOnly
+                if (string.IsNullOrEmpty(domain))//hostOnly TODO? Remove(HttpHeaders.Cookie) risk
                 {
                     if (_container.TryGetValue(host, out var cookies))
                     {
@@ -998,8 +1011,8 @@ namespace System.Extensions.Http
                                         cookies.RemoveAt(i);
                                         continue;
                                     }
-                                    Debug.Assert(cookie.HostOnly);
-                                    Debug.Assert(cookie.Domain.EqualsIgnoreCase(host));
+                                    //Debug.Assert(cookie.HostOnly);
+                                    //Debug.Assert(cookie.Domain.EqualsIgnoreCase(host));
                                     if (cookie.Path != "/")
                                     {
                                         if (!path.StartsWith(cookie.Path))
@@ -1020,13 +1033,23 @@ namespace System.Extensions.Http
                                 }
 
                                 if (sb.Length > 0)
+                                {
                                     request.Headers[HttpHeaders.Cookie] = sb.ToString();
+                                }
+                                else
+                                {
+                                    request.Headers.Remove(HttpHeaders.Cookie);
+                                }
                             }
                             finally
                             {
                                 disposable.Dispose();
                             }
                         }
+                    }
+                    else 
+                    {
+                        request.Headers.Remove(HttpHeaders.Cookie);
                     }
                 }
                 else
@@ -1077,13 +1100,25 @@ namespace System.Extensions.Http
                                     sb.Write('=');
                                     sb.Write(cookie.Value);
                                 }
-                                request.Headers.Add(HttpHeaders.Cookie, sb.ToString());
+
+                                if (sb.Length > 0)
+                                {
+                                    request.Headers[HttpHeaders.Cookie] = sb.ToString();
+                                }
+                                else
+                                {
+                                    request.Headers.Remove(HttpHeaders.Cookie);
+                                }
                             }
                             finally
                             {
                                 disposable.Dispose();
                             }
                         }
+                    }
+                    else 
+                    {
+                        request.Headers.Remove(HttpHeaders.Cookie);
                     }
                 }
                 var response = await _client.SendAsync(request);
@@ -1194,7 +1229,7 @@ namespace System.Extensions.Http
                         || string.IsNullOrEmpty(location))
                         return response;
 
-                    if (location[0] == '/')//TODO? new HttpRequest()
+                    if (location[0] == '/')
                         request.Url.AbsolutePath = location;
                     else
                         request.Url.AbsoluteUri = location;
@@ -1207,6 +1242,8 @@ namespace System.Extensions.Http
                     {
                         request.Method = HttpMethod.Get;
                         request.Content = null;
+                        request.Headers.Remove(HttpHeaders.ContentLength);
+                        request.Headers.Remove(HttpHeaders.TransferEncoding);
                     }
                     else if (request.Content != null)
                     {
@@ -2402,5 +2439,19 @@ namespace System.Extensions.Http
         //    }
         //}
         #endregion
+        //private class RetryClient : HttpClient
+        //{
+        //    private HttpClient _client;
+        //    private int _maxRetry;
+        //    public RetryClient(HttpClient client, int maxRetry)
+        //    {
+        //        _client = client;
+        //        _maxRetry = maxRetry;
+        //    }
+        //    public override Task<HttpResponse> SendAsync(HttpRequest request)
+        //    {
+        //        throw new NotImplementedException();
+        //    }
+        //}
     }
 }

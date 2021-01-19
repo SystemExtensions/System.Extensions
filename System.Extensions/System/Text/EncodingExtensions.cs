@@ -457,5 +457,19 @@ namespace System.Text
                 @this.Advance(toCopy);
             }
         }
+        public static ReadOnlySpan<byte> GetPreamble(this Encoding @this, ReadOnlySpan<byte> bytes)
+        {
+            var preamble = @this.Preamble;
+            var preambleLength = preamble.Length;
+            if (preambleLength == 0 || bytes.Length < preambleLength)
+                return bytes;
+
+            for (int i = 0; i < preambleLength; i++)
+            {
+                if (preamble[i] != bytes[i])
+                    return bytes;
+            }
+            return bytes.Slice(preambleLength);
+        }
     }
 }

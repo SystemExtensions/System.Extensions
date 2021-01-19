@@ -105,7 +105,7 @@ namespace System.Buffers
             private void TryAlloc(int size)
             {
                 Debug.Assert(size > 0);
-                if (_available > size)
+                if (_available >= size)
                     return;
 
                 var temp = _array.Length - _available;
@@ -117,8 +117,7 @@ namespace System.Buffers
                     _end.SetNext(segment);
                     _end = segment;
                 }
-                var runningIndex = checked((int)_end.RunningIndex);
-                var newSize = runningIndex > 4000 ? 4000 : 2 * runningIndex;
+                var newSize = 2 * _array.Length;
                 _array = new T[newSize < size ? size : newSize];
                 _available = _array.Length;
             }
@@ -128,7 +127,7 @@ namespace System.Buffers
                 get
                 {
                     var temp = _array.Length - _available;
-                    if (_end.RunningIndex + temp == 0)
+                    if (temp == 0 && _end.RunningIndex == 0)
                         return ReadOnlySequence<T>.Empty;
                     _end.SetMemory(_array.AsMemory(0, temp));
                     return new ReadOnlySequence<T>(_start, 0, _end, temp);//temp maybe 0
@@ -161,18 +160,12 @@ namespace System.Buffers
             }
             public override Memory<T> GetMemory(int sizeHint = 0)
             {
-                if (sizeHint <= 0)
-                    sizeHint = 1;
-
-                TryAlloc(sizeHint);
+                TryAlloc(sizeHint <= 0 ? 1 : sizeHint);
                 return _array.AsMemory(_array.Length - _available);
             }
             public override Span<T> GetSpan(int sizeHint = 0)
             {
-                if (sizeHint <= 0)
-                    sizeHint = 1;
-
-                TryAlloc(sizeHint);
+                TryAlloc(sizeHint <= 0 ? 1 : sizeHint);
                 return _array.AsSpan(_array.Length - _available);
             }
             public override void Write(T value)
@@ -281,7 +274,7 @@ namespace System.Buffers
             }
             private void TryAlloc(int size)
             {
-                Debug.Assert(size > 0);
+                Debug.Assert(size >= 0);
                 if (_available > size)
                     return;
 
@@ -294,10 +287,16 @@ namespace System.Buffers
                     _end.SetNext(segment);
                     _end = segment;
                 }
-                _array = _pool.Rent(size <= _minimumLength ? _minimumLength : size);
-                //Console.WriteLine("Pool Rent:"+_array.Length);
+                if (size > _minimumLength)
+                {
+                    _array = new T[size];
+                }
+                else
+                {
+                    _array = _pool.Rent(_minimumLength);
+                    _end.Array = _array;
+                }
                 _available = _array.Length;
-                _end.Array = _array;
             }
             public override long Length => _end.RunningIndex + (_array.Length - _available);
             public override ReadOnlySequence<T> Sequence
@@ -305,7 +304,7 @@ namespace System.Buffers
                 get
                 {
                     var temp = _array.Length - _available;
-                    if (_end.RunningIndex + temp == 0)
+                    if (temp == 0 && _end.RunningIndex == 0)
                         return ReadOnlySequence<T>.Empty;
                     _end.SetMemory(_array.AsMemory(0, temp));
                     return new ReadOnlySequence<T>(_start, 0, _end, temp);
@@ -338,18 +337,12 @@ namespace System.Buffers
             }
             public override Memory<T> GetMemory(int sizeHint = 0)
             {
-                if (sizeHint <= 0)
-                    sizeHint = 1;
-
-                TryAlloc(sizeHint);
+                TryAlloc(sizeHint <= 0 ? 1 : sizeHint);
                 return _array.AsMemory(_array.Length - _available);
             }
             public override Span<T> GetSpan(int sizeHint = 0)
             {
-                if (sizeHint <= 0)
-                    sizeHint = 1;
-
-                TryAlloc(sizeHint);
+                TryAlloc(sizeHint <= 0 ? 1 : sizeHint);
                 return _array.AsSpan(_array.Length - _available);
             }
             public override void Write(T value)

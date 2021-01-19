@@ -1159,7 +1159,6 @@ namespace System.Extensions.Http
                 ArrayPool<byte>.Shared.Return(bytes);
             }
         }
-        //BOM??
         public static Task<string> ReadStringAsync(this IHttpContent @this)
         {
             return ReadStringAsync(@this, Encoding.UTF8);
@@ -1176,6 +1175,22 @@ namespace System.Extensions.Http
             var decoder = encoding.GetDecoder();
             try
             {
+                for (var offset = 0; ;)//BOM OR ([0]=='\uFEFF' sb.ToString(1))
+                {
+                    var result = await @this.ReadAsync(bytes, offset, bytes.Length - offset);
+                    if (result == 0)
+                    {
+                        sb.WriteBytes(encoding.GetPreamble(bytes.AsSpan(0, offset)), true, decoder);
+                        return sb.ToString();
+                    }
+                    offset += result;
+                    if (offset > 4)
+                    {
+                        sb.WriteBytes(encoding.GetPreamble(bytes.AsSpan(0, offset)), false, decoder);
+                        break;
+                    }
+                }
+
                 for (; ; )
                 {
                     var result = await @this.ReadAsync(bytes);
@@ -1211,6 +1226,22 @@ namespace System.Extensions.Http
             var decoder = encoding.GetDecoder();
             try
             {
+                for (var offset = 0; ;)//BOM
+                {
+                    var result = await @this.ReadAsync(bytes, offset, bytes.Length - offset);
+                    if (result == 0)
+                    {
+                        writer.WriteBytes(encoding.GetPreamble(bytes.AsSpan(0, offset)), true, decoder);
+                        return;
+                    }
+                    offset += result;
+                    if (offset > 4)
+                    {
+                        writer.WriteBytes(encoding.GetPreamble(bytes.AsSpan(0, offset)), false, decoder);
+                        break;
+                    }
+                }
+
                 for (; ; )
                 {
                     var result = await @this.ReadAsync(bytes);
@@ -1244,6 +1275,7 @@ namespace System.Extensions.Http
             var decoder = encoding.GetDecoder();
             try
             {
+                //TODO? Bom Unnecessary
                 for (; ; )
                 {
                     var result = await @this.ReadAsync(bytes);
@@ -1847,9 +1879,9 @@ namespace System.Extensions.Http
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
 
-            //0byte yes create
-            var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1, FileOptions.Asynchronous);//not use FileMode.OpenOrCreate
             var bytes = ArrayPool<byte>.Shared.Rent(8192);
+            //0byte yes create,not use FileMode.OpenOrCreate
+            var fs = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 1, FileOptions.Asynchronous);
             try
             {
                 for (; ; )
@@ -2444,13 +2476,16 @@ namespace System.Extensions.Http
         }
         #endregion
 
+        //TODO? Add(HttpHeaders.ContentType)=>[HttpHeaders.ContentType]=
         public static HttpResponse UseRedirect(this HttpResponse @this, string location)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
+            if (location == null)
+                throw new ArgumentNullException(nameof(location));
 
             @this.StatusCode = 302;//Move Temporarily
-            @this.Headers.Add(HttpHeaders.Location, location);
+            @this.Headers[HttpHeaders.Location] = location;
             return @this;
         }
         public static HttpResponse UseCookie(this HttpResponse @this, string name, string value)
@@ -2477,8 +2512,6 @@ namespace System.Extensions.Http
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
-            if (name == null)
-                throw new ArgumentNullException(nameof(name));
 
             var sb = StringExtensions.ThreadRent(out var disposable);
             try
@@ -2584,10 +2617,12 @@ namespace System.Extensions.Http
         }
         public static HttpResponse UseFile(this HttpResponse @this, HttpRequest request, FileInfo file, string contentType)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (file == null)
+                throw new ArgumentNullException(nameof(file));
             if (!file.Exists)
                 throw new FileNotFoundException(file.FullName);
 
@@ -2657,11 +2692,6 @@ namespace System.Extensions.Http
             private long _position;
             public SegmentContent(FileInfo file, long offset, long length)
             {
-                if (file == null)
-                    throw new ArgumentNullException(nameof(file));
-                if (!file.Exists)
-                    throw new FileNotFoundException(file.FullName);
-
                 _file = file;
                 _offset = offset;
                 _length = length;
@@ -2744,7 +2774,6 @@ namespace System.Extensions.Http
                     return;
 
                 _file = null;
-
                 if (_fs != null)
                 {
                     _fs.Dispose();
@@ -2763,15 +2792,15 @@ namespace System.Extensions.Http
                 var length = file.Length;
                 if (sep == 6)// -to
                 {
-                    if (int.TryParse(range.AsSpan(7), out var to))
+                    if (long.TryParse(range.AsSpan(7), out var to))
                     {
                         if (to > 0 && to <= length)
                             return new SegmentContent(file, length - to, to);
                     }
                 }
-                else if (sep + 1 == length)//from-
+                else if (sep + 1 == range.Length)//from-
                 {
-                    if (int.TryParse(range.AsSpan(6, sep - 6), out var from))
+                    if (long.TryParse(range.AsSpan(6, sep - 6), out var from))
                     {
                         if (from >= 0 && from < length)
                             return new SegmentContent(file, from, length - from);
@@ -2779,7 +2808,7 @@ namespace System.Extensions.Http
                 }
                 else//from-to
                 {
-                    if (int.TryParse(range.AsSpan(6, sep - 6), out var from) && int.TryParse(range.AsSpan(sep + 1), out var to))
+                    if (long.TryParse(range.AsSpan(6, sep - 6), out var from) && long.TryParse(range.AsSpan(sep + 1), out var to))
                     {
                         if (from >= 0 && from < length && to >= from && to < length)
                             return new SegmentContent(file, from, to - from + 1);
@@ -2791,7 +2820,7 @@ namespace System.Extensions.Http
         private static string _Hex = "0123456789abcdef";//JAVA long.toHexString
         private static string GetETag(long etagHash)
         {
-            Debug.Assert(etagHash > 0);
+            Debug.Assert(etagHash >= 0);//? &0x0f..
             unsafe
             {
                 var chars = stackalloc char[66];
@@ -2800,7 +2829,7 @@ namespace System.Extensions.Http
                 do
                 {
                     chars[--charPos] = _Hex[(int)(etagHash & 15)];
-                    etagHash >>= 4;//>>>=无符号移位
+                    etagHash >>= 4;//? >>>=
                 } while (etagHash != 0);
                 chars[--charPos] = '\"';
                 return new string(chars, charPos, 66 - charPos);
@@ -3148,7 +3177,7 @@ namespace System.Extensions.Http
 
             if (capacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (@this.Length > capacity)
+            if (@this.Length > capacity)//TODO? Remove
                 throw new InvalidDataException(nameof(capacity));
 
             return new BoundedContent(@this, capacity);
@@ -3325,11 +3354,11 @@ namespace System.Extensions.Http
             #region NotSupported
             public override void SetLength(long value)
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException(nameof(SetLength));
             }
             public override void Write(byte[] buffer, int offset, int count)
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException(nameof(Write));
             }
             public override void Flush()
             {
@@ -3446,7 +3475,7 @@ namespace System.Extensions.Http
             }
             public override void Write(byte[] buffer, int offset, int count)
             {
-                throw new NotSupportedException();
+                throw new NotSupportedException(nameof(Write));
             }
             #endregion
         }
@@ -3459,8 +3488,6 @@ namespace System.Extensions.Http
             private byte[] _buffer;
             public DeflateEncoderContent(IHttpContent content, DeflateEncoder encoder)
             {
-                Debug.Assert(content != null);
-                Debug.Assert(encoder != null);
                 _content = content;
                 _encoder = encoder;
                 _buffer = ArrayPool<byte>.Shared.Rent(8192);
@@ -3633,7 +3660,7 @@ namespace System.Extensions.Http
             {
                 return ReadAsync(buffer.AsMemory(offset, count));
             }
-            public void Dispose()
+            public void Dispose()//TODO Sync
             {
                 var content = _content;
                 _content = null;
@@ -3660,7 +3687,6 @@ namespace System.Extensions.Http
             private byte[] _buffer;
             public BrotliEncoderContent(IHttpContent content, BrotliEncoder encoder)
             {
-                Debug.Assert(content != null);
                 _content = content;
                 _encoder = encoder;
                 _buffer = ArrayPool<byte>.Shared.Rent(8192);
@@ -3773,10 +3799,8 @@ namespace System.Extensions.Http
                             _length -= bytesConsumed;
                             if (status != OperationStatus.Done)
                                 throw new InvalidDataException($"OperationStatus:{status}");
-
                             if (bytesWritten == 0)
                                 return await ReadAsync(buffer);
-
                             return bytesWritten;
                         }
                     }
@@ -3787,10 +3811,8 @@ namespace System.Extensions.Http
                         _length -= bytesConsumed;
                         if (status != OperationStatus.Done)
                             throw new InvalidDataException($"OperationStatus:{status}");
-
                         if (bytesWritten == 0)
                             return await ReadAsync(buffer);
-
                         return bytesWritten;
                     }
                 }
@@ -3799,7 +3821,7 @@ namespace System.Extensions.Http
             {
                 return ReadAsync(buffer.AsMemory(offset, count));
             }
-            public void Dispose()
+            public void Dispose()//TODO Sync
             {
                 var content = _content;
                 _content = null;

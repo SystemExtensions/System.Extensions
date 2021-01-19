@@ -579,7 +579,7 @@ namespace System.Net.Mime
             }
             public void Reset()
             {
-
+                throw new NotSupportedException(nameof(Reset));
             }
             public void Dispose()
             {

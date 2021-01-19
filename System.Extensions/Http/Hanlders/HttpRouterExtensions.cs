@@ -402,8 +402,6 @@ namespace System.Extensions.Http
         }
         public static HttpRouter MapFile(this HttpRouter @this, string template, string fileName, TimeSpan? maxAge)
         {
-            //文件不maxAge 意义
-
             if (!MimeTypes.Default.TryGetValue(fileName, out var mimeType))
                 mimeType = "application/octet-stream";
 
@@ -427,20 +425,20 @@ namespace System.Extensions.Http
         }
         public static HttpRouter MapFiles(this HttpRouter @this, string template, string path, MimeTypes mimeTypes, TimeSpan? maxAge, string subPathParam)
         {
-            //Path.EndsInDirectorySeparator
-            if (!path.EndsWith(Path.DirectorySeparatorChar) && !path.EndsWith(Path.AltDirectorySeparatorChar))
-                path = path + Path.DirectorySeparatorChar;
-            path = Path.GetFullPath(path);
-            if (!Directory.Exists(path))
+            if (Path.EndsInDirectorySeparator(path))
+                path += Path.DirectorySeparatorChar;
+
+            var root = new DirectoryInfo(path);
+            if (!root.Exists)
                 throw new DirectoryNotFoundException(path);
 
             if (mimeTypes == null)
                 mimeTypes = MimeTypes.Default;
             if (subPathParam == null)
                 subPathParam = "path";
-            
-            @this.GetTree.Map(template, new FilesHandler(path, mimeTypes, maxAge, subPathParam));
-            @this.HeadTree.Map(template, new FilesHandler(path, mimeTypes, maxAge, subPathParam));
+
+            @this.GetTree.Map(template, new FilesHandler(root, mimeTypes, maxAge, subPathParam));
+            @this.HeadTree.Map(template, new FilesHandler(root, mimeTypes, maxAge, subPathParam));
             return @this;
         }
 
@@ -482,13 +480,13 @@ namespace System.Extensions.Http
         }
         private class FilesHandler : IHttpHandler
         {
-            private string _path;//结尾有分隔符
+            private DirectoryInfo _root;
             private string _subPathParam;
             private MimeTypes _mimeTypes;
             private TimeSpan? _maxAge;
-            public FilesHandler(string path, MimeTypes mimeTypes, TimeSpan? maxAge, string subPathParam)
+            public FilesHandler(DirectoryInfo root, MimeTypes mimeTypes, TimeSpan? maxAge, string subPathParam)
             {
-                _path = path;
+                _root = root;
                 _mimeTypes = mimeTypes;
                 _maxAge = maxAge;
                 _subPathParam = subPathParam;
@@ -497,11 +495,12 @@ namespace System.Extensions.Http
             {
                 if (!request.PathParams().TryGetValue(_subPathParam,out var subPath))
                     return Task.FromResult<HttpResponse>(null);
-                var file = new FileInfo(Path.Combine(_path, subPath));
-                if(!file.Exists)
+                //TODO? prohibit RelativeSegments
+                var file = _root.GetFile(subPath);
+                if (!file.Exists)
                     return Task.FromResult<HttpResponse>(null);
-                if (!file.FullName.StartsWith(_path))//../
-                    return Task.FromResult<HttpResponse>(null);
+                //if (!file.FullName.StartsWith(_path))//../  risk? Exhaustion Path
+                //    return Task.FromResult<HttpResponse>(null);
                 if (!_mimeTypes.TryGetValue(file.FullName, out var mimeType))
                     return Task.FromResult<HttpResponse>(null);
 
@@ -525,7 +524,7 @@ namespace System.Extensions.Http
                 }
                 return Task.FromResult(response);
             }
-            public override string ToString() => _path;
+            public override string ToString() => _root.FullName;
         }
         #endregion
 

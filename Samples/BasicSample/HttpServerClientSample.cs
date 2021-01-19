@@ -14,7 +14,7 @@ namespace BasicSample
 {
     public class HttpServerClientSample
     {
-        private static HttpClient _Client1 = HttpClient.Default.UseCompression().UseCookie().UseRedirect().UseTimeout().Use(async (req, client) => {
+        private static HttpClient _Client1 = HttpClient.Default.UseTimeout().UseCookie().UseRedirect().UseCompression().Use(async (req, client) => {
             req.Headers.Add(HttpHeaders.UserAgent, "My-Client");
             req.Headers.Add("My-Header-Name", "MyHeaderValue");
             var query = req.Url.Query;
@@ -55,20 +55,23 @@ namespace BasicSample
 
 
         private static HttpClient _Client4 = HttpClient.Default.Use(async (req, client) => {
+            req.Headers.TryGetValue(HttpHeaders.Cookie, out var cookie);
+            Console.WriteLine(cookie);
             try
             {
                 var response = await client.SendAsync(req);
                 return response;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 if (req.Content != null && !req.Content.Rewind())
-                    throw;
-                Console.WriteLine("Retry");
+                    throw ex;
+                Console.WriteLine($"Retry once:{ex.Message}");
                 var response = await client.SendAsync(req);
                 return response;
             }
-        }).UseCookie().UseRedirect();
+        })
+            .UseCookie(new[] { "initName1=initValue1; Domain=localhost" }).UseRedirect();
         private static HttpClient _Client5 = HttpClient.CreateHttps("localhost", 9899, 2).UseTimeout();
         private static HttpClient _Client6 = HttpClient.CreateHttp(() => ClientConnection.Create("localhost", 9899).UseSsl(
             new SslClientAuthenticationOptions()
@@ -136,7 +139,7 @@ namespace BasicSample
         }
 
 
-        private static HttpClient _Client9 = HttpClient.Default.UseCookie().UseRedirect().UseTimeout().Use((req, client) => {
+        private static HttpClient _Client9 = HttpClient.Default.UseTimeout().UseCookie().UseRedirect().Use((req, client) => {
             if (req.Version == null)
                 req.Version = HttpVersion.Version20;
             return client.SendAsync(req);

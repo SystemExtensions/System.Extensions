@@ -252,26 +252,11 @@ namespace System.Buffers
             public override void Write(float value) => _writer.Write(value, provider: FormatProvider);
             public override void Write(double value) => _writer.Write(value, provider: FormatProvider);
             public override void Write(decimal value) => _writer.Write(value, provider: FormatProvider);
-            public override void Write(char[] buffer, int index, int count)
-            {
-                _writer.Write(buffer.AsSpan(index, count));
-            }
-            public override void Write(ReadOnlySpan<char> buffer)
-            {
-                _writer.Write(buffer);
-            }
-            public override void Write(char[] buffer)
-            {
-                _writer.Write(buffer);
-            }
-            public override void Write(string value)
-            {
-                _writer.Write(value);
-            }
-            public override string ToString()
-            {
-                return _writer.ToString();
-            }
+            public override void Write(char[] buffer, int index, int count) => _writer.Write(buffer.AsSpan(index, count));
+            public override void Write(ReadOnlySpan<char> buffer) => _writer.Write(buffer);
+            public override void Write(char[] buffer) => _writer.Write(buffer);
+            public override void Write(string value) => _writer.Write(value);
+            public override string ToString() => _writer.ToString();
         }
         #endregion
 

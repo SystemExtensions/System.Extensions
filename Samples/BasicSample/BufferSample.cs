@@ -15,7 +15,6 @@ namespace BasicSample
             Console.WriteLine("Buffer<char>");
             var c1 = Buffer<char>.Create(1);
             //Buffer<char>.Create(ArrayPool<char>.Shared, 1024, out var disposable);
-            //Buffer<char>.Create(Provider<Memory<char>>, 1024, out var disposable);
             //StringExtensions.ThreadRent(out var disposable); ThreadStatic
             //StringExtensions.Rent(out var disposable);
             //StringContent.Rent(out var disposable) http
@@ -61,7 +60,6 @@ namespace BasicSample
             Console.WriteLine("Buffer<byte>");
             var b1 = Buffer<byte>.Create(1);
             //Buffer<byte>.Create(ArrayPool<byte>.Shared, 1024, out var disposable);
-            //Buffer<byte>.Create(Provider<Memory<byte>>, 1024, out var disposable);
             //MemoryContent.Rent(out var disposable) http
 
             b1.Write((byte)'A');

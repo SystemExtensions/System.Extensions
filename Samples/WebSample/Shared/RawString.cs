@@ -15,11 +15,11 @@ namespace WebSample
             _value = value;
         }
         public string Value => _value;
-        public void Write(JsonWriter writer) 
+        public void Invoke(JsonWriter writer) 
         {
             writer.WriteString(_value);
         }
-        public void Read(JsonReader reader) 
+        public void Invoke(JsonReader reader) 
         {
             _value = reader.GetString();
         }

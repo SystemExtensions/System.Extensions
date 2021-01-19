@@ -10,6 +10,7 @@ namespace WebSample
     {
         public SharedModule() 
         {
+            //(for TEST)
             Task.Run(async () =>
             {
                 for (; ; )
@@ -31,6 +32,10 @@ namespace WebSample
             //use your log lib
             _logQueue.Enqueue($"LOG:{DateTime.Now},{request.Connection().RemoteEndPoint},{request.Method}:{request.Url}");//for test
 
+            //Host filter
+            //if (!request.Url.Host.EqualsIgnoreCase("localhost")) 
+            //{
+            //}
             //CSRF Referer
             //if (request.Method == HttpMethod.Post)
             //{
@@ -41,7 +46,8 @@ namespace WebSample
                 return null;
 
             //http StringContent=>Compression
-            if (request.Url.Scheme.EqualsIgnoreCase("http") && response.Content is StringContent)
+            //OR request.Url.Scheme.EqualsIgnoreCase("http")
+            if (request.Connection().Security == null && response.Content is StringContent)
             {
                 response.UseCompression(request, 9, 9, 11);
             }

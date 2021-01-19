@@ -2,7 +2,6 @@
 namespace System
 {
     using System.Net;
-    using System.Diagnostics;
     using System.Text;
     using System.Buffers;
     using System.Reflection;
@@ -26,12 +25,13 @@ namespace System
                 {
                     try
                     {
+                        //https://github.com/dotnet/runtime/blob/master/src/libraries/System.Net.Primitives/src/System/Net/IPAddressParser.cs
                         _Ipv4StringToAddress = type.GetMethod(nameof(Ipv4StringToAddress)).CreateDelegate<Ipv4StringToAddress>();
                         _Ipv6StringToAddress = type.GetMethod(nameof(Ipv6StringToAddress)).CreateDelegate<Ipv6StringToAddress>();
                     }
                     catch 
                     {
-                        Debug.WriteLine("Exception:IPAddressParser");
+                        Console.WriteLine("IPAddressParser");
                     }
                     break;
                 }
