@@ -240,7 +240,7 @@ namespace System.Extensions.Http
 
             return new HandlerA(handler);
         }
-        public static IHttpHandler Create(Func<HttpRequest, HttpResponse, Task> handler)
+        public static IHttpHandler Create(Func<HttpRequest, HttpResponse, Task> handler)//TODO? ValueTask
         {
             if (handler == null)
                 throw new ArgumentNullException(nameof(handler));

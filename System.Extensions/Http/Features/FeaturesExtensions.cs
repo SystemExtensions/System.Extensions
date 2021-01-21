@@ -436,7 +436,6 @@ namespace System.Extensions.Http
                                         temp = dictionary;
                                     }
                                 }
-
                             }
                         }
                     };
@@ -1336,7 +1335,7 @@ namespace System.Extensions.Http
                     {
                         var result = await @this.ReadAsync(buffer.GetMemory());
                         if (result == 0)
-                            return new _BufferedStream(buffer, disposable);
+                            return new BufferedContentStream(buffer, disposable);
 
                         buffer.Advance(result);
                         bufferSize += result;
@@ -1354,7 +1353,7 @@ namespace System.Extensions.Http
                             if (result == 0)
                             {
                                 fs.Position = 0;
-                                return new _BufferedStream(buffer, disposable, fs);
+                                return new BufferedContentStream(buffer, disposable, fs);
                             }
 
                             await fs.WriteAsync(bytes.AsMemory(0, result));
@@ -1475,9 +1474,9 @@ namespace System.Extensions.Http
         }
         public static Task<IDisposable> ReadFormDataAsync(this IHttpContent @this, FormParams formParams, FormFileParams formFileParams, string boundary)
         {
-            return ReadFormDataAsync(@this, formParams, Encoding.UTF8, formFileParams, boundary);
+            return ReadFormDataAsync(@this, formParams, Encoding.UTF8, int.MaxValue, formFileParams, boundary);
         }
-        public static async Task<IDisposable> ReadFormDataAsync(this IHttpContent @this, FormParams formParams, Encoding encoding, FormFileParams formFileParams, string boundary)
+        public static async Task<IDisposable> ReadFormDataAsync(this IHttpContent @this, FormParams formParams, Encoding encoding, int maxForm, FormFileParams formFileParams, string boundary)
         {
             if (@this == null)
                 return null;
@@ -1485,6 +1484,8 @@ namespace System.Extensions.Http
                 throw new ArgumentNullException(nameof(boundary));
             if (boundary.Length == 0 || boundary.Length > 250)//OR (skip int[])
                 throw new ArgumentOutOfRangeException(nameof(boundary));
+            if (maxForm < 0)
+                maxForm = int.MaxValue;
 
             const int MaxHeader = 4096;
             const byte DASHByte = (byte)'-', SPByte = (byte)' ', CRByte = (byte)'\r', LFByte = (byte)'\n', COLONByte = (byte)':';
@@ -1512,6 +1513,7 @@ namespace System.Extensions.Http
             var matchBytesLengthMinusOne = matchBytesLength - 1;
             var matchBytesLastByte = matchBytes[matchBytesLengthMinusOne];
 
+            var formSize = 0;
             var bytes = ArrayPool<byte>.Shared.Rent(8192);
             var sb = StringExtensions.Rent(out var disposable);
             var tempFiles = new List<string>();
@@ -1777,6 +1779,9 @@ namespace System.Extensions.Http
                             Debug.WriteLine("matchComplete");
                             if (fileName == null)
                             {
+                                formSize += matchOffset - start;
+                                if (formSize > maxForm)
+                                    throw new InvalidDataException(nameof(maxForm));
                                 sb.WriteBytes(bytes.AsSpan(start, matchOffset - start), false, decoder);
                                 if (matchCount == matchBytesLength)
                                 {
@@ -2006,7 +2011,7 @@ namespace System.Extensions.Http
                 try
                 {
                     var content = request.Content.AsBounded(maxFormData);
-                    var disposable = await content.ReadFormDataAsync(formParams, encoding, formFileParams, boundary);
+                    var disposable = await content.ReadFormDataAsync(formParams, encoding, maxForm, formFileParams, boundary);
                     request.RegisterForDispose(disposable);
                 }
                 finally
@@ -2030,7 +2035,7 @@ namespace System.Extensions.Http
             var index = fileName.Length;
             while (--index >= 0)
             {
-                char c = fileName[index];
+                var c = fileName[index];
                 if (c == '.')
                 {
                     extension = fileName.Substring(index);
@@ -2038,7 +2043,7 @@ namespace System.Extensions.Http
                 }
                 if (c == Path.DirectorySeparatorChar
                     || c == Path.AltDirectorySeparatorChar
-                    || c == Path.VolumeSeparatorChar)
+                    || c == Path.VolumeSeparatorChar)//?Path.PathSeparator
                     return false;
             }
             return false;
@@ -2058,7 +2063,7 @@ namespace System.Extensions.Http
             var index = fileName.Length;
             while (--index >= 0)
             {
-                char c = fileName[index];
+                var c = fileName[index];
                 if (c == '.')
                 {
                     var extSpan = fileName.AsSpan(index);
@@ -2071,7 +2076,7 @@ namespace System.Extensions.Http
                 }
                 if (c == Path.DirectorySeparatorChar
                     || c == Path.AltDirectorySeparatorChar
-                    || c == Path.VolumeSeparatorChar)
+                    || c == Path.VolumeSeparatorChar)//?Path.PathSeparator
                     return false;
             }
             return false;
@@ -2093,7 +2098,7 @@ namespace System.Extensions.Http
             var index = fileName.Length;
             while (--index >= 0)
             {
-                char c = fileName[index];
+                var c = fileName[index];
                 if (c == '.')
                 {
                     var extSpan = fileName.AsSpan(index);
@@ -2111,7 +2116,7 @@ namespace System.Extensions.Http
                 }
                 if (c == Path.DirectorySeparatorChar
                     || c == Path.AltDirectorySeparatorChar
-                    || c == Path.VolumeSeparatorChar)
+                    || c == Path.VolumeSeparatorChar)//?Path.PathSeparator
                     return false;
             }
             return false;
@@ -2135,7 +2140,7 @@ namespace System.Extensions.Http
             var index = fileName.Length;
             while (--index >= 0)
             {
-                char c = fileName[index];
+                var c = fileName[index];
                 if (c == '.')
                 {
                     var extSpan = fileName.AsSpan(index);
@@ -2158,7 +2163,7 @@ namespace System.Extensions.Http
                 }
                 if (c == Path.DirectorySeparatorChar
                     || c == Path.AltDirectorySeparatorChar
-                    || c == Path.VolumeSeparatorChar)
+                    || c == Path.VolumeSeparatorChar)//?Path.PathSeparator
                     return false;
             }
             return false;
@@ -2178,7 +2183,7 @@ namespace System.Extensions.Http
             var index = fileName.Length;
             while (--index >= 0)
             {
-                char c = fileName[index];
+                var c = fileName[index];
                 if (c == '.')
                 {
                     var extSpan = fileName.AsSpan(index);
@@ -2194,7 +2199,7 @@ namespace System.Extensions.Http
                 }
                 if (c == Path.DirectorySeparatorChar
                     || c == Path.AltDirectorySeparatorChar
-                    || c == Path.VolumeSeparatorChar)
+                    || c == Path.VolumeSeparatorChar)//?Path.PathSeparator
                     return false;
             }
             return false;
@@ -3192,20 +3197,20 @@ namespace System.Extensions.Http
 
         #region private
         private enum State { Cr, Lf, LfCr, Name, Colon, Value, Boundary, Dash, DashDash, DashCr };
-        private class _BufferedStream : Stream
+        private class BufferedContentStream : Stream
         {
             private long _length;
             private long _position;
             private ReadOnlySequence<byte> _bytes;
             private IDisposable _disposable;
             private FileStream _tempFile;
-            public _BufferedStream(Buffer<byte> buffer, IDisposable disposable)
+            public BufferedContentStream(Buffer<byte> buffer, IDisposable disposable)
             {
                 _bytes = buffer.Sequence;
                 _length = _bytes.Length;
                 _disposable = disposable;
             }
-            public _BufferedStream(Buffer<byte> buffer, IDisposable disposable, FileStream tempFile)
+            public BufferedContentStream(Buffer<byte> buffer, IDisposable disposable, FileStream tempFile)
             {
                 _bytes = buffer.Sequence;
                 _tempFile = tempFile;

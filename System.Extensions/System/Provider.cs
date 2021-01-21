@@ -92,7 +92,7 @@ namespace System
                 if (Interlocked.CompareExchange(ref Head, head.Next, head) == head)
                 {
                     Debug.Assert(head.Provider == null);
-                    head.Provider = this;
+                    head.Provider = this;//TODO .Next=null
                     value = head.Value;
                     disposable = head;
                     return true;
@@ -111,7 +111,7 @@ namespace System
                     if (Interlocked.CompareExchange(ref Head, head.Next, head) == head)
                     {
                         Debug.Assert(head.Provider == null);
-                        head.Provider = this;
+                        head.Provider = this;//TODO .Next=null
                         value = head.Value;
                         disposable = head;
                         return true;

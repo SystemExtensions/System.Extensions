@@ -79,8 +79,8 @@ namespace System.Extensions.Net
                 throw new ArgumentNullException(nameof(handler));
 
             var optionsValue = new Http2Options();
-            var routerValue = new HttpRouter();
-            handler.Invoke(optionsValue, routerValue);
+            var router = new HttpRouter();
+            handler.Invoke(optionsValue, router);
             if (optionsValue.Certificate == null)
                 throw new ArgumentNullException(nameof(optionsValue.Certificate));
             var http1 = new HttpService(
@@ -89,7 +89,7 @@ namespace System.Extensions.Net
                 optionsValue.Http1SendTimeout,
                 optionsValue.Http1MaxHeaderSize
                 );
-            http1.Handler = routerValue;
+            http1.Handler = router;
             var http2 = new Http2Service(
                 optionsValue.KeepAliveTimeout,
                 optionsValue.ReceiveTimeout,
@@ -99,7 +99,7 @@ namespace System.Extensions.Net
                 optionsValue.MaxHeaderListSize,
                 optionsValue.MaxSettings
                 );
-            http2.Handler = routerValue;
+            http2.Handler = router;
             var service = new Service(http1, http2, optionsValue.Certificate, optionsValue.HandShakeTimeout);
             @this.Handler = service;
             return service;

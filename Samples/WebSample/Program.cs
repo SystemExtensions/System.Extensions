@@ -4,6 +4,7 @@ using System.Data;
 using System.Text;
 using System.Dynamic;
 using System.Buffers;
+using System.Runtime.Loader;
 using System.Reflection;
 using System.Diagnostics;
 using System.Extensions.Net;
@@ -67,7 +68,7 @@ namespace WebSample
                 //options.ReceiveTimeout = 0;
                 //options.SendTimeout = 0;
 
-                router.MapFiles("/{*path}", "StaticFiles", null);//null only for Test(use TimeSpan.FromDays())
+                router.MapFiles("/{*path}", "StaticFiles", null);//null for Test(use TimeSpan.From)
                 //OR
                 //router.MapFile("/favicon.ico", "StaticFiles/favicon.ico", null);
                 //router.MapFiles("/Js/{*path}", "StaticFiles/Js/", null);
@@ -77,7 +78,11 @@ namespace WebSample
                 compiler.Register<SqlDb>(SqlDb.Create<SqliteConnection>("Data Source=data.db", cmd => Debug.WriteLine(cmd.CommandText)));
                 compiler.Register<IHttp2Pusher>(req => req.Pusher());
                 compiler.Register<Passport>(req => req.GetPassport());
-                router.MapAttribute(compiler);
+
+                //if Assembly not load
+                //AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName(nameof(YourAssemblyName)));
+                router.MapAttribute(compiler);//AssemblyLoadContext.Default.Assemblies
+
                 //router.MapSlash();
 
                 Console.WriteLine("GET:");
@@ -90,7 +95,6 @@ namespace WebSample
                 {
                     Console.WriteLine(item.Key);
                 }
-
             }).Use(new SharedModule());
 
             //Start(int maxConnections, int backlog)

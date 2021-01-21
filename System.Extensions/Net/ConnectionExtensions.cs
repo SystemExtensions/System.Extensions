@@ -365,14 +365,23 @@ namespace System.Extensions.Net
         }
         public static void UseSslAsync(Func<IConnection, SslServerAuthenticationOptions, Task<IConnection>> useSslAsync)
         {
-            if (useSslAsync == null)
+            if (useSslAsync == null) 
+            {
                 useSslAsync = async (connection, options) =>
                 {
                     var ssl = new SslConnection(connection);
-                    await ssl.AuthenticateAsync(options);
+                    try
+                    {
+                        await ssl.AuthenticateAsync(options);
+                    }
+                    catch
+                    {
+                        ssl.Close();
+                        throw;
+                    }
                     return ssl;
                 };
-
+            }
             _UseSslAsync = useSslAsync;
         }
         public static void UseSslAsync(out Func<IConnection, SslServerAuthenticationOptions, Task<IConnection>> useSslAsync)

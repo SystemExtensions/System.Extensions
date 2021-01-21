@@ -7,7 +7,7 @@ namespace System.Extensions.Http
     public sealed class ReadJsonAttribute : Attribute
     {
         #region private
-        private static int _MaxLength = 1 << 20;//1M
+        private static int _MaxLength = 2 << 20;//2M
         private int _maxLength;
         #endregion
         public ReadJsonAttribute() 

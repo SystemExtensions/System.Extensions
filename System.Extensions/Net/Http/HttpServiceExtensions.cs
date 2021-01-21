@@ -94,15 +94,15 @@ namespace System.Extensions.Net
                 throw new ArgumentNullException(nameof(handler));
 
             var optionsValue = new HttpOptions();
-            var routerValue = new HttpRouter();
-            handler.Invoke(optionsValue, routerValue);
+            var router = new HttpRouter();
+            handler.Invoke(optionsValue, router);
             var service = new HttpService(
                 optionsValue.KeepAliveTimeout,
                 optionsValue.ReceiveTimeout,
                 optionsValue.SendTimeout,
                 optionsValue.MaxHeaderSize
                 );
-            service.Handler = routerValue;
+            service.Handler = router;
             @this.Handler = service;
             return service;
         }
@@ -138,8 +138,8 @@ namespace System.Extensions.Net
                 throw new ArgumentNullException(nameof(handler));
 
             var optionsValue = new HttpsOptions();
-            var routerValue = new HttpRouter();
-            handler?.Invoke(optionsValue, routerValue);
+            var router = new HttpRouter();
+            handler?.Invoke(optionsValue, router);
             if (optionsValue.Certificate == null)
                 throw new ArgumentNullException(nameof(optionsValue.Certificate));
             var http = new HttpService(
@@ -148,7 +148,7 @@ namespace System.Extensions.Net
                 optionsValue.SendTimeout,
                 optionsValue.MaxHeaderSize
                 );
-            http.Handler = routerValue;
+            http.Handler = router;
             var https = new Service(http, optionsValue.Certificate, optionsValue.HandShakeTimeout);
             @this.Handler = https;
             return https;

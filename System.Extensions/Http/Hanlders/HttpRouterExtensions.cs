@@ -53,7 +53,6 @@ namespace System.Extensions.Http
             {
                 @this.Map(item.Key, item.Value);
             }
-
             return @this;
         }
         public static HttpRouter MapSlash(this HttpRouter @this) 
@@ -396,7 +395,6 @@ namespace System.Extensions.Http
                         }
                     }
                 }
-
             }
             return @this;
         }
@@ -447,33 +445,20 @@ namespace System.Extensions.Http
         {
             private FileInfo _file;
             private string _contentType;
-            private TimeSpan? _maxAge;
+            private string _maxAge;
             public FileHandler(FileInfo file, string contentType, TimeSpan? maxAge)
             {
                 _file = file;
                 _contentType = contentType;
-                _maxAge = maxAge;
+                if (maxAge != null)
+                    _maxAge = $"max-age={(long)maxAge.Value.TotalSeconds}";
             }
             public Task<HttpResponse> HandleAsync(HttpRequest request)
             {
                 var response = request.CreateResponse();
                 response.UseFile(request, _file, _contentType);
                 if (_maxAge != null)
-                {
-                    var seconds = (long)_maxAge.Value.TotalSeconds;
-                    Span<char> dest = stackalloc char[28];
-                    dest[0] = 'm';
-                    dest[1] = 'a';
-                    dest[2] = 'x';
-                    dest[3] = '-';
-                    dest[4] = 'a';
-                    dest[5] = 'g';
-                    dest[6] = 'e';
-                    dest[7] = '=';
-                    seconds.TryFormat(dest.Slice(8), out var charsWritten);
-                    var cacheControl = new string(dest.Slice(0, charsWritten + 8));
-                    response.Headers.Add(HttpHeaders.CacheControl, cacheControl);
-                }
+                    response.Headers.Add(HttpHeaders.CacheControl, _maxAge);
                 return Task.FromResult(response);
             }
             public override string ToString() => _file.FullName;
@@ -483,13 +468,14 @@ namespace System.Extensions.Http
             private DirectoryInfo _root;
             private string _subPathParam;
             private MimeTypes _mimeTypes;
-            private TimeSpan? _maxAge;
+            private string _maxAge;
             public FilesHandler(DirectoryInfo root, MimeTypes mimeTypes, TimeSpan? maxAge, string subPathParam)
             {
                 _root = root;
                 _mimeTypes = mimeTypes;
-                _maxAge = maxAge;
                 _subPathParam = subPathParam;
+                if (maxAge != null)
+                    _maxAge = $"max-age={(long)maxAge.Value.TotalSeconds}";
             }
             public Task<HttpResponse> HandleAsync(HttpRequest request)
             {
@@ -507,21 +493,7 @@ namespace System.Extensions.Http
                 var response = request.CreateResponse();
                 response.UseFile(request, file, mimeType);
                 if (_maxAge != null)
-                {
-                    var seconds = (long)_maxAge.Value.TotalSeconds;
-                    Span<char> dest = stackalloc char[28];
-                    dest[0] = 'm';
-                    dest[1] = 'a';
-                    dest[2] = 'x';
-                    dest[3] = '-';
-                    dest[4] = 'a';
-                    dest[5] = 'g';
-                    dest[6] = 'e';
-                    dest[7] = '=';
-                    seconds.TryFormat(dest.Slice(8), out var charsWritten);
-                    var cacheControl = new string(dest.Slice(0, charsWritten + 8));
-                    response.Headers.Add(HttpHeaders.CacheControl, cacheControl);
-                }
+                    response.Headers.Add(HttpHeaders.CacheControl, _maxAge);
                 return Task.FromResult(response);
             }
             public override string ToString() => _root.FullName;

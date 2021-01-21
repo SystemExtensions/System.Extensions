@@ -78,7 +78,7 @@ namespace BasicSample
                     ReasonPhrase = "Connection Established"
                 };
                 await conn.SendAsync(resp, req);
-                req.Dispose();
+                req.Dispose();//try finally
                 resp.Dispose();
                 var proxyClient = ClientConnection.Create(req.Url.Host, req.Url.Port ?? 443, out var proxyDisposable);
                 await proxyClient.OpenAsync();
@@ -139,7 +139,7 @@ namespace BasicSample
                         ReasonPhrase = "Connection Established"
                     };
                     await conn.SendAsync(resp, req);
-                    req.Dispose();
+                    req.Dispose();//try finally
                     resp.Dispose();
                     var proxyClient = ClientConnection.Create(req.Url.Host, req.Url.Port ?? 443, out var proxyDisposable);
                     await proxyClient.OpenAsync();
@@ -150,7 +150,7 @@ namespace BasicSample
                 {
                     var resp = await httpClient.SendAsync(req);
                     await conn.SendAsync(resp, req);
-                    req.Dispose();
+                    req.Dispose();//try finally
                     resp.Dispose();
                     await handler.HandleAsync(conn);
                 }
@@ -284,7 +284,7 @@ namespace BasicSample
                         ReasonPhrase = "Connection Established"
                     };
                     await conn.SendAsync(resp, req);
-                    req.Dispose();
+                    req.Dispose();//try finally
                     resp.Dispose();
                     var proxyClient = ClientConnection.Create("localhost", 8699, out var proxyDisposable);//fiddleSvr
                     await proxyClient.OpenAsync();
@@ -297,7 +297,7 @@ namespace BasicSample
                 {
                     var resp = await httpClient.SendAsync(req);
                     await conn.SendAsync(resp, req);
-                    req.Dispose();
+                    req.Dispose();//try finally
                     resp.Dispose();
                     await handler.HandleAsync(conn);
                 }
@@ -368,7 +368,7 @@ namespace BasicSample
                 await proxyClient.OpenAsync();
                 var resp = await proxyClient.SendAsync(req);
                 await conn.SendAsync(resp, req);
-                req.Dispose();
+                req.Dispose();//try finally
                 resp.Dispose();
                 await PipeAsync(proxyClient, conn);
                 proxyDisposable.Dispose(); //try finally
@@ -396,7 +396,7 @@ namespace BasicSample
                     ReasonPhrase = "Connection Established"
                 };
                 await conn.SendAsync(resp, req);
-                req.Dispose();
+                req.Dispose();//try finally
                 resp.Dispose();
                 if (req.Headers.TryGetValue("Proxy-Authority", out var authority)) 
                 {

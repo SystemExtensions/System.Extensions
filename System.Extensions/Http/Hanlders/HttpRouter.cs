@@ -472,17 +472,13 @@ namespace System.Extensions.Http
                     request.PathParams(pathParams);
                 }
             }
-            var handler = default(IHttpHandler);
-            if (request.Method == HttpMethod.Get)
-                handler = _getTree.Match(path, pathParams);
-            else if (request.Method == HttpMethod.Post)
-                handler = _postTree.Match(path, pathParams);
-            else if (request.Method == HttpMethod.Put)
-                handler = _putTree.Match(path, pathParams);
-            else if (request.Method == HttpMethod.Delete)
-                handler = _deleteTree.Match(path, pathParams);
-            else if (request.Method == HttpMethod.Head)
-                handler = _headTree.Match(path, pathParams);
+
+            var handler =
+                request.Method == HttpMethod.Get ? _getTree.Match(path, pathParams) :
+                request.Method == HttpMethod.Post ? _postTree.Match(path, pathParams) :
+                request.Method == HttpMethod.Put ? _putTree.Match(path, pathParams) :
+                request.Method == HttpMethod.Delete ? _deleteTree.Match(path, pathParams) :
+                request.Method == HttpMethod.Head ? _headTree.Match(path, pathParams) : null;
 
             if (handler != null)
                 return await handler.HandleAsync(request);
