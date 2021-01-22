@@ -10,7 +10,7 @@ namespace System
         #region static provider 
         private class StackProvider : Provider<T>//TODO? IDisposable
         {
-            public StackProvider(Func<T> valueFactory, int max,Action<T> reset)
+            public StackProvider(Func<T> valueFactory, int max, Action<T> reset)
             {
                 Node temp = null;
                 for (int i = 0; i < max; i++)

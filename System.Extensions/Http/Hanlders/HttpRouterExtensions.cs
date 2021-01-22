@@ -210,29 +210,6 @@ namespace System.Extensions.Http
             }
             return @this;
         }
-        public static HttpRouter MapAttribute(this HttpRouter @this, HandlerCompiler compiler, Func<MethodInfo, IHttpModule> moduleDelegate)
-        {
-            if (@this == null)
-                throw new ArgumentNullException(nameof(@this));
-            if (compiler == null)
-                throw new ArgumentNullException(nameof(compiler));
-
-            var currentAssembly = typeof(HttpRouterExtensions).Assembly.GetName();
-            var assemblies = AssemblyLoadContext.Default.Assemblies;
-            foreach (var assembly in assemblies)
-            {
-                var referencedAssemblies = assembly.GetReferencedAssemblies();
-                foreach (var referencedAssembly in referencedAssemblies)
-                {
-                    if (AssemblyName.ReferenceMatchesDefinition(currentAssembly, referencedAssembly))
-                    {
-                        MapAttribute(@this, assembly.GetExportedTypes(), compiler, moduleDelegate);
-                        break;
-                    }
-                }
-            }
-            return @this;
-        }
         public static HttpRouter MapAttribute(this HttpRouter @this, HandlerCompiler compiler, Func<MethodInfo, IHttpHandler[], IHttpHandler[], IHttpHandler, IHttpHandler> handlerDelegate)
         {
             if (@this == null)
@@ -265,21 +242,6 @@ namespace System.Extensions.Http
                     handlers.AddRange(methodHandlers);
                     handlers.Add(handler);
                     return HttpHandler.CreatePipeline(handlers);
-                });
-        }
-        public static HttpRouter MapAttribute(this HttpRouter @this, Type[] types, HandlerCompiler compiler, Func<MethodInfo, IHttpModule> moduleDelegate)
-        {
-            return MapAttribute(@this, types, compiler,
-                (method, typeHandlers, methodHandlers, handler) => {
-                    var handlers = new List<IHttpHandler>();
-                    handlers.AddRange(typeHandlers);
-                    handlers.AddRange(methodHandlers);
-                    handlers.Add(handler);
-                    var module = moduleDelegate?.Invoke(method);
-                    if (module == null)
-                        return HttpHandler.CreatePipeline(handlers);
-                    module.Handler = HttpHandler.CreatePipeline(handlers);
-                    return module;
                 });
         }
         public static HttpRouter MapAttribute(this HttpRouter @this, Type[] types, HandlerCompiler compiler, Func<MethodInfo, IHttpHandler[], IHttpHandler[], IHttpHandler, IHttpHandler> handlerDelegate)

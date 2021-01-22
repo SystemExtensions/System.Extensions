@@ -110,7 +110,7 @@ namespace System.IO.Compression
         private static Func<DeflateEncoder, int, int, int> _Init;
         private static Func<DeflateEncoder, int, int> _Deflate;
         private static Func<DeflateEncoder, int> _DeflateEnd;
-        public DeflateEncoder(int level,int windowBits)
+        public DeflateEncoder(int level, int windowBits)
         {
             if (level < 0 || level > 9)
                 throw new ArgumentOutOfRangeException(nameof(level));

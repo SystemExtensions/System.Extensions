@@ -119,7 +119,7 @@ namespace System.Extensions.Http
         {
             return _headers.ContainsKey(name);
         }
-        public bool TryGetValue(string name,out string value)
+        public bool TryGetValue(string name, out string value)
         {
             return _headers.TryGetValue(name, out value);
         }

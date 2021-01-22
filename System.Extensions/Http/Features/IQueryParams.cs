@@ -7,7 +7,7 @@ namespace System.Extensions.Http
         KeyValuePair<string, string> this[int index] { get; }
         int Count { get; }
         bool Contains(string name);
-        bool TryGetValue(string name,out string value);
+        bool TryGetValue(string name, out string value);
         string[] GetValues(string name);
     }
 }

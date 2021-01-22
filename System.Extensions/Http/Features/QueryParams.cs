@@ -49,7 +49,7 @@ namespace System.Extensions.Http
                     throw new InvalidOperationException(nameof(_MaxCapacity));
             }
         }
-        public void Add(string name,string value)
+        public void Add(string name, string value)
         {
             if (name == null)
                 throw new ArgumentNullException(nameof(name));

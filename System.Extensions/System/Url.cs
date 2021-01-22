@@ -478,7 +478,7 @@ namespace System
                     _path = value;
                     return;
                 }
-                if (!IsPath(value))
+                if (!IsPath(value))//TODO \ ex or replace(/)
                     throw new ArgumentException(nameof(Path));
 
                 _path = value[0] == '/' ? value : '/' + value;

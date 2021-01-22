@@ -649,7 +649,7 @@ namespace System.Extensions.Net
 
             return (Socket)@this.Properties[_Socket];
         }
-        public static void Socket(this IConnection @this,Socket socket) 
+        public static void Socket(this IConnection @this, Socket socket)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));

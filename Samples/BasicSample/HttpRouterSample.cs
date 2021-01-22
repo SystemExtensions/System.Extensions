@@ -4,6 +4,7 @@ using System.IO;
 using System.Extensions.Http;
 using System.Net.Mime;
 using System.Reflection;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BasicSample
@@ -34,6 +35,26 @@ namespace BasicSample
             var compiler = new HandlerCompiler();//See HandlerCompilerSample
             //compiler.Register()
             router.MapAttribute(new[] { typeof(TestService) }, compiler);
+            //customize
+            router.MapAttribute(new[] { typeof(TestService) }, compiler,
+                (method, typeHandlers, methodHandlers, handler) =>
+                {
+                    var handlers = new List<IHttpHandler>();
+                    handlers.Add(HttpHandler.CreateModule((req, handler) =>
+                    {
+                        Console.WriteLine("Before typeHandlers");
+                        return handler.HandleAsync(req);
+                    }));
+                    handlers.AddRange(typeHandlers);
+                    handlers.Add(HttpHandler.CreateModule((req, handler) =>
+                    {
+                        Console.WriteLine("Before methodHandlers");
+                        return handler.HandleAsync(req);
+                    }));
+                    handlers.AddRange(methodHandlers);
+                    handlers.Add(handler);
+                    return HttpHandler.CreatePipeline(handlers);
+                });
             //router.MapAttribute(compiler);
             //router.MapAttribute(handlerDelegate)
             Console.WriteLine();
@@ -170,6 +191,7 @@ namespace BasicSample
             //OR /Path1/{param1}/{param2}/{param3}
             var req13 = new HttpRequest("/Path1///") { Method = HttpMethod.Get };
             var resp13 = router5.HandleAsync(req13).Result;
+
         }
 
         [MyLog]

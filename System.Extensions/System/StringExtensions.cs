@@ -10,7 +10,7 @@ namespace System
         {
             return @this.AsSpan().Equals(value, StringComparison.Ordinal);
         }
-        public static bool EqualsIgnoreCase(this string @this,string value)
+        public static bool EqualsIgnoreCase(this string @this, string value)
         {
             if (@this == null)
                 return value == null;

@@ -10,7 +10,7 @@ namespace System.Buffers
             protected int _length;
             protected unsafe T* _dataPtr;
             public UnmanagedMemoryManager() { }
-            public unsafe UnmanagedMemoryManager(T* dataPtr,int length)
+            public unsafe UnmanagedMemoryManager(T* dataPtr, int length)
             {
                 Debug.Assert(length > 0);
                 _length = length;

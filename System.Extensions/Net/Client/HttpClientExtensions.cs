@@ -42,7 +42,7 @@ namespace System.Extensions.Http
             try
             {
                 var response = await @this.SendAsync(request);
-                await handler(response);
+                await handler(response);//TODO? ValueTask
             }
             finally
             {
@@ -68,7 +68,7 @@ namespace System.Extensions.Http
                 request.Dispose();
             }
         }
-        public static async Task<T> GetJsonAsync<T>(this HttpClient @this, string url,IQueryParams queryParams)
+        public static async Task<T> GetJsonAsync<T>(this HttpClient @this, string url, IQueryParams queryParams)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -114,7 +114,7 @@ namespace System.Extensions.Http
             if (url == null)
                 throw new ArgumentNullException(nameof(url));
 
-            var request = new HttpRequest(url);
+            var request = new HttpRequest(url) { Method = HttpMethod.Get };
             try
             {
                 queryParams.Join(request.Url);
@@ -164,7 +164,7 @@ namespace System.Extensions.Http
                 request.Dispose();
             }
         }
-        public static async Task<long> GetFileAsync(this HttpClient @this, string url,string path)
+        public static async Task<long> GetFileAsync(this HttpClient @this, string url, string path)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -227,7 +227,7 @@ namespace System.Extensions.Http
                 request.Dispose();
             }
         }
-        public static async Task<T> PostJsonAsync<T>(this HttpClient @this, string url, IFormParams formParams,IFormFileParams formFileParams)
+        public static async Task<T> PostJsonAsync<T>(this HttpClient @this, string url, IFormParams formParams, IFormFileParams formFileParams)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -622,7 +622,7 @@ namespace System.Extensions.Http
 
             return new CookieClient(@this, null);
         }
-        public static HttpClient UseCookie(this HttpClient @this,IList<string> setCookies)
+        public static HttpClient UseCookie(this HttpClient @this, IList<string> setCookies)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -651,6 +651,9 @@ namespace System.Extensions.Http
         }
         public static HttpClient UseCompression(this HttpClient @this, params string[] acceptEncodings)
         {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+
             if (acceptEncodings == null || acceptEncodings.Length == 0)
                 return @this;
 
@@ -941,7 +944,7 @@ namespace System.Extensions.Http
                     }
                 }
             }
-            public CookieClient(HttpClient client,IList<string> setCookies)
+            public CookieClient(HttpClient client, IList<string> setCookies)
             {
                 //TODO?
                 //使用Timer缓存CookieHeader
@@ -1200,7 +1203,7 @@ namespace System.Extensions.Http
         {
             private HttpClient _client;
             private int _maxRedirections;
-            public RedirectClient(HttpClient client,int maxRedirections)
+            public RedirectClient(HttpClient client, int maxRedirections)
             {
                 _client = client;
                 _maxRedirections = maxRedirections;

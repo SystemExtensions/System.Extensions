@@ -13,7 +13,7 @@ namespace BasicSample
 
 
             //HttpServerClientSample.RunHttp();
-            HttpServerClientSample.RunHttps();
+            //HttpServerClientSample.RunHttps();
             //HttpServerClientSample.RunHttpAndHttps();
             //HttpServerClientSample.RunHttp2();
             //HttpServerClientSample.RunHttpAndH2();
