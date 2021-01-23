@@ -20,9 +20,6 @@ namespace System.Extensions.Http
         }
         public FormFileParams(int capacity)
         {
-            if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity));
-
             _fileCollection = new KeyValueCollection<string, IFormFile>(capacity, StringComparer.Ordinal);
         }
         public KeyValuePair<string, IFormFile> this[int index]
@@ -184,7 +181,6 @@ namespace System.Extensions.Http
             private string _contentType;
             public FormFile(string fileName, string contentType, FileInfo file)
             {
-
                 _fileName = fileName;
                 _contentType = contentType;
                 _file = file;
@@ -194,10 +190,10 @@ namespace System.Extensions.Http
             public string ContentType => _contentType;
             public Task SaveAsync(string filePath)
             {
-                if (_file == null)
+                if (_file == null)//TODO? Create 0 byte
                     throw new InvalidOperationException("No Data");
-                //File.Create(filePath).Dispose();//创建个0字节的文件
-                File.Copy(_file.FullName, filePath, true);//覆盖
+
+                File.Copy(_file.FullName, filePath, true);//overwrite
                 return Task.CompletedTask;
             }
             public Stream OpenRead()

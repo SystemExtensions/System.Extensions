@@ -17,9 +17,6 @@ namespace System.Extensions.Http
         }
         public FormParams(int capacity)
         {
-            if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity));
-
             _formCollection = new KeyValueCollection<string, string>(capacity, StringComparer.Ordinal);
         }
         public KeyValuePair<string, string> this[int index]

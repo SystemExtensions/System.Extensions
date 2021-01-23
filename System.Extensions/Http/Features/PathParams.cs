@@ -16,9 +16,6 @@ namespace System.Extensions.Http
         }
         public PathParams(int capacity)
         {
-            if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity));
-
             _pathCollection = new KeyValueCollection<string, string>(capacity, StringComparer.Ordinal);
         }
         public KeyValuePair<string, string> this[int index]

@@ -17,9 +17,6 @@ namespace System.Extensions.Http
         }
         public HttpHeaders(int capacity)
         {
-            if (capacity < 0)
-                throw new ArgumentOutOfRangeException(nameof(capacity));
-
             _headers = new KeyValueCollection<string, string>(capacity, StringComparer.OrdinalIgnoreCase);
         }
         public KeyValuePair<string, string> this[int index]

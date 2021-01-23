@@ -3182,10 +3182,14 @@ namespace System.Extensions.Http
 
             if (capacity < 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity));
-            if (@this.Length > capacity)//TODO? Remove
+
+            var length = @this.Length;
+            if (length == -1)
+                return new BoundedContent(@this, capacity);
+            if (length > capacity)
                 throw new InvalidDataException(nameof(capacity));
 
-            return new BoundedContent(@this, capacity);
+            return @this;
         }
         public static Stream AsStream(this IHttpContent @this)
         {

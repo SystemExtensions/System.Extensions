@@ -68,7 +68,7 @@ namespace System.Collections.Generic
         { }
         public KeyValueCollection(int capacity, IEqualityComparer<TKey> comparer)
         {
-            if (capacity <= 0)
+            if (capacity <= 0)//TODO? 0=Array.Empty
                 throw new ArgumentOutOfRangeException(nameof(capacity));
             if (comparer == null)
                 throw new ArgumentNullException(nameof(comparer));
