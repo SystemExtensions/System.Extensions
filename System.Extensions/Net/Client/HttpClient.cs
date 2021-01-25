@@ -583,12 +583,7 @@ namespace System.Extensions.Http
                         if (url.Port.HasValue)
                         {
                             Write((byte)':');
-                            unsafe
-                            {
-                                Span<char> chars = stackalloc char[5];//0-65535
-                                url.Port.Value.TryFormat(chars, out var charsWritten);
-                                Write(chars.Slice(0, charsWritten));
-                            }
+                            Write(url.Port.Value);
                         }
                     }
                     //TODO (options *)?

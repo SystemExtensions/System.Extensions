@@ -113,29 +113,26 @@ namespace System.Text
             if (bytes.IsSingleSegment)
                 return @this.GetCharCount(bytes.First.Span);
 
-            unsafe
+            var decoder = @this.GetDecoder();
+            var seq = bytes.GetEnumerator();
+            seq.MoveNext();
+            var bytesSpan = seq.Current.Span;
+            Span<char> charsSpan = stackalloc char[1024];
+            var charCount = 0;
+            bool completed; int charsUsed, bytesUsed;
+            for (; ; )
             {
-                var decoder = @this.GetDecoder();
-                var seq = bytes.GetEnumerator();
-                seq.MoveNext();
-                var bytesSpan = seq.Current.Span;
-                Span<char> charsSpan = stackalloc char[128];
-                var charCount = 0;
-                bool completed; int charsUsed, bytesUsed;
-                for (; ; )
+                decoder.Convert(bytesSpan, charsSpan, false, out bytesUsed, out charsUsed, out completed);
+                bytesSpan = bytesSpan.Slice(bytesUsed);
+                charCount += charsUsed;
+                if (bytesSpan.Length == 0)
                 {
-                    decoder.Convert(bytesSpan, charsSpan, false, out bytesUsed, out charsUsed, out completed);
-                    bytesSpan = bytesSpan.Slice(bytesUsed);
-                    charCount += charsUsed;
-                    if (bytesSpan.Length == 0)
-                    {
-                        if (!seq.MoveNext())
-                            break;
-                        bytesSpan = seq.Current.Span;
-                    }
+                    if (!seq.MoveNext())
+                        break;
+                    bytesSpan = seq.Current.Span;
                 }
-                return charCount;
             }
+            return charCount;
         }
         public static string GetString(this Encoding @this, ReadOnlySequence<byte> bytes)
         {

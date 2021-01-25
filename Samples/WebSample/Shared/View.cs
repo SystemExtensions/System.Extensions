@@ -14,6 +14,8 @@ namespace WebSample
         static View()
         {
             Engine = new ViewEngine();
+            //if Assembly not load
+            //AssemblyLoadContext.Default.LoadFromAssemblyName(new AssemblyName(nameof(YourAssemblyName)));
             Engine.Register(AssemblyLoadContext.Default.Assemblies);
         }
         public View() 

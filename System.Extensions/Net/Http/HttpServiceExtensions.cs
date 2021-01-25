@@ -490,9 +490,8 @@ namespace System.Extensions.Net
                 var url = _request.Url;
                 if (_request.Method == HttpMethod.Connect)
                 {
-                    //BUG Debug.Assert(url.Port != null);
                     Write(url.Host);
-                    if (url.Port != null) 
+                    if (url.Port.HasValue)
                     {
                         Write((byte)':');
                         Write(url.Port.Value);

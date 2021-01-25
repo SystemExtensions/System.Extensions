@@ -70,14 +70,14 @@ namespace BasicSample
             File.WriteAllText("Static/testHtml1.html", "<h1>testHtml1<h1>", new UTF8Encoding(false));
             File.WriteAllText("Static/testHtml2.html", "<h2>testHtml2<h2>", new UTF8Encoding(false));
             //MapFile
-            router.MapFile("/testFile1", "Static/testFile.txt", TimeSpan.FromDays(1));//CacheControl 
-            router.MapFile("/testFile2", "Static/testFile.txt", "text/html; charset=utf-8", TimeSpan.FromDays(1));
+            router.MapFile("/testFile1", "Static/testFile.txt", 86400);//CacheControl 
+            router.MapFile("/testFile2", "Static/testFile.txt", "text/html; charset=utf-8", 86400);
             //MapFiles
-            router.MapFiles("/static1/{*path}", "Static", TimeSpan.FromDays(1));
+            router.MapFiles("/static1/{*path}", "Static", 86400);
             var customMimeTypes = new MimeTypes();
             //var customMimeTypes = new MimeTypes(MimeTypes.Default);
             customMimeTypes.Add(".html", "text/html; charset=utf-8");
-            router.MapFiles("/static2/{*customName}", "Static", customMimeTypes, TimeSpan.FromDays(1), "customName");
+            router.MapFiles("/static2/{*customName}", "Static", customMimeTypes, 86400, "customName");
             //router.MapFiles("/static2/{*customName}", "Static", MimeTypes.Default, TimeSpan.FromDays(1), "customName");
 
 

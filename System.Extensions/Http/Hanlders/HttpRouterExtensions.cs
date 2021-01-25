@@ -360,14 +360,14 @@ namespace System.Extensions.Http
             }
             return @this;
         }
-        public static HttpRouter MapFile(this HttpRouter @this, string template, string fileName, TimeSpan? maxAge)
+        public static HttpRouter MapFile(this HttpRouter @this, string template, string fileName, int? maxAge)
         {
             if (!MimeTypes.Default.TryGetValue(fileName, out var mimeType))
                 mimeType = "application/octet-stream";
 
             return MapFile(@this, template, fileName, mimeType, maxAge);
         }
-        public static HttpRouter MapFile(this HttpRouter @this, string template, string fileName, string contentType, TimeSpan? maxAge)
+        public static HttpRouter MapFile(this HttpRouter @this, string template, string fileName, string contentType, int? maxAge)
         {
             var file = new FileInfo(fileName);
             if (!file.Exists)
@@ -379,11 +379,11 @@ namespace System.Extensions.Http
             @this.HeadTree.Map(template, new FileHandler(file, contentType, maxAge));
             return @this;
         }
-        public static HttpRouter MapFiles(this HttpRouter @this, string template, string path, TimeSpan? maxAge)
+        public static HttpRouter MapFiles(this HttpRouter @this, string template, string path, int? maxAge)
         {
             return MapFiles(@this, template, path, null, maxAge, null);
         }
-        public static HttpRouter MapFiles(this HttpRouter @this, string template, string path, MimeTypes mimeTypes, TimeSpan? maxAge, string subPathParam)
+        public static HttpRouter MapFiles(this HttpRouter @this, string template, string path, MimeTypes mimeTypes, int? maxAge, string subPathParam)
         {
             if (Path.EndsInDirectorySeparator(path))
                 path += Path.DirectorySeparatorChar;
@@ -408,12 +408,12 @@ namespace System.Extensions.Http
             private FileInfo _file;
             private string _contentType;
             private string _maxAge;
-            public FileHandler(FileInfo file, string contentType, TimeSpan? maxAge)
+            public FileHandler(FileInfo file, string contentType, int? maxAge)
             {
                 _file = file;
                 _contentType = contentType;
                 if (maxAge != null)
-                    _maxAge = $"max-age={(long)maxAge.Value.TotalSeconds}";
+                    _maxAge = $"max-age={maxAge.Value}";
             }
             public Task<HttpResponse> HandleAsync(HttpRequest request)
             {
@@ -431,13 +431,13 @@ namespace System.Extensions.Http
             private string _subPathParam;
             private MimeTypes _mimeTypes;
             private string _maxAge;
-            public FilesHandler(DirectoryInfo root, MimeTypes mimeTypes, TimeSpan? maxAge, string subPathParam)
+            public FilesHandler(DirectoryInfo root, MimeTypes mimeTypes, int? maxAge, string subPathParam)
             {
                 _root = root;
                 _mimeTypes = mimeTypes;
                 _subPathParam = subPathParam;
                 if (maxAge != null)
-                    _maxAge = $"max-age={(long)maxAge.Value.TotalSeconds}";
+                    _maxAge = $"max-age={maxAge.Value}";
             }
             public Task<HttpResponse> HandleAsync(HttpRequest request)
             {

@@ -68,7 +68,7 @@ namespace WebSample
                 //options.ReceiveTimeout = 0;
                 //options.SendTimeout = 0;
 
-                router.MapFiles("/{*path}", "StaticFiles", null);//null for Test(use TimeSpan.From)
+                router.MapFiles("/{*path}", "StaticFiles", null);//null for Test(use maxAge)
                 //OR
                 //router.MapFile("/favicon.ico", "StaticFiles/favicon.ico", null);
                 //router.MapFiles("/Js/{*path}", "StaticFiles/Js/", null);

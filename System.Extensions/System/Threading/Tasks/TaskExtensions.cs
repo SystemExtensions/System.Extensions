@@ -4,7 +4,6 @@ namespace System.Threading.Tasks
 {
     public static class TaskExtensions
     {
-        
         #region private
         private class TimeoutTask//TODO? :TaskCompletionSource<object>
         {

@@ -9,8 +9,8 @@ namespace System
     {
         #region private
         private static readonly bool[,] _ccTLDs;
-        private unsafe delegate bool Ipv4StringToAddress(ReadOnlySpan<char> ipSpan, out long address);
-        private unsafe delegate bool Ipv6StringToAddress(ReadOnlySpan<char> ipSpan, Span<ushort> numbers, int numbersLength, out uint scope);
+        private delegate bool Ipv4StringToAddress(ReadOnlySpan<char> ipSpan, out long address);
+        private delegate bool Ipv6StringToAddress(ReadOnlySpan<char> ipSpan, Span<ushort> numbers, int numbersLength, out uint scope);
         private static Ipv4StringToAddress _Ipv4StringToAddress;
         private static Ipv6StringToAddress _Ipv6StringToAddress;
         //0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_.~
@@ -18,23 +18,16 @@ namespace System
         #endregion
         static Url()
         {
-            //IPAddressParser
-            foreach (var type in typeof(IPAddress).Assembly.GetTypes())
+            try
             {
-                if (type.Name == "IPAddressParser")
-                {
-                    try
-                    {
-                        //https://github.com/dotnet/runtime/blob/master/src/libraries/System.Net.Primitives/src/System/Net/IPAddressParser.cs
-                        _Ipv4StringToAddress = type.GetMethod(nameof(Ipv4StringToAddress)).CreateDelegate<Ipv4StringToAddress>();
-                        _Ipv6StringToAddress = type.GetMethod(nameof(Ipv6StringToAddress)).CreateDelegate<Ipv6StringToAddress>();
-                    }
-                    catch 
-                    {
-                        Console.WriteLine("IPAddressParser");
-                    }
-                    break;
-                }
+                //https://github.com/dotnet/runtime/blob/master/src/libraries/System.Net.Primitives/src/System/Net/IPAddressParser.cs
+                var ipAddressParser = typeof(IPAddress).Assembly.GetType("System.Net.IPAddressParser");
+                _Ipv4StringToAddress = ipAddressParser.GetMethod("Ipv4StringToAddress").CreateDelegate<Ipv4StringToAddress>();
+                _Ipv6StringToAddress = ipAddressParser.GetMethod("Ipv6StringToAddress").CreateDelegate<Ipv6StringToAddress>();
+            }
+            catch
+            {
+                Console.WriteLine("IPAddressParser");
             }
 
             _ccTLDs = new bool[26, 26]{
@@ -781,6 +774,19 @@ namespace System
             }
             set
             {
+                if (string.IsNullOrEmpty(value))
+                {
+                    _scheme = null;//?=value
+                    _userInfo = null;
+                    _host = null;
+                    _hostNameType = UriHostNameType.Unknown;
+                    _port = null;
+                    _path = null;
+                    _query = null;
+                    _fragment = null;
+                    return;
+                }
+
                 var schemeIndex = value.IndexOf(SchemeDelimiter);
                 if (schemeIndex <= 0)
                     throw new FormatException(nameof(AbsoluteUri));
@@ -1117,12 +1123,9 @@ namespace System
                 return IPAddress.TryParse(host, out var _);
 
             const int IPv6AddressShorts = 8;
-            unsafe
-            {
-                Span<ushort> numbers = stackalloc ushort[IPv6AddressShorts];
-                numbers.Clear();
-                return _Ipv6StringToAddress(host, numbers, IPv6AddressShorts, out uint scope);
-            }
+            Span<ushort> numbers = stackalloc ushort[IPv6AddressShorts];
+            numbers.Clear();
+            return _Ipv6StringToAddress(host, numbers, IPv6AddressShorts, out uint scope);
         }
         public static bool IsIPv4(ReadOnlySpan<char> host)
         {
@@ -2098,7 +2101,6 @@ namespace System
                     {
                         disposable.Dispose();
                     }
-                   
                 }
             }
         }

@@ -514,14 +514,14 @@ namespace System.Net.Mime
                 mimeType = null;
                 return false;
             }
-            int length = fileName.Length;
-            int num = length;
-            while (--num >= 0)
+            var length = fileName.Length;
+            var index = length;
+            while (--index >= 0)
             {
-                char c = fileName[num];
+                var c = fileName[index];
                 if (c == '.')
                 {
-                    if (_mimeTypes.TryGetValue((fileName, num + 1), out mimeType))
+                    if (_mimeTypes.TryGetValue((fileName, index + 1), out mimeType))
                         return true;
                     break;
                 }
