@@ -95,7 +95,7 @@ var book = await db.SelectSingleAsync<Book>((b, s) => s.Navigate(b), 100/*BookId
 	(b, s) => b.Category.Id == 1/*CategoryId*/, //where
 	(b, s) => s.Desc(b.CreateTime));//orderBy
 ```
-[View More](https://github.com/SystemExtensions/System.Extensions/tree/master/Samples)
+[View More](Samples)
 
 ## Get Support
 
@@ -110,7 +110,6 @@ System.Extensions is licensed under the [MIT](LICENSE) license.
 - [WeChat](https://share.weiyun.com/85mNdQnS)
 - [Alipay](https://share.weiyun.com/nMqXbWHU)
 - [PayPal](https://www.paypal.me/zhanghe1024)
-
 
 return signed USB disk with two year code backup(send receiving address via email)
 
