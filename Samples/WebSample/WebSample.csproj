@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Data.Sqlite" Version="3.1.10" />
-    <PackageReference Include="System.Extensions.RazorCompilation" Version="3.1.0" />
+    <PackageReference Include="SystemExtensions.RazorCompilation" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>

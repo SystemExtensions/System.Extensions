@@ -4,7 +4,7 @@
     <Version>3.1.0</Version>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <PackageId>System.Extensions.Core</PackageId>
+    <PackageId>SystemExtensions.Core</PackageId>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>SystemExtensions</Authors>
     <Description>System.Extensions</Description>

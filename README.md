@@ -7,8 +7,8 @@
 
 Package                                   | NuGet
 ------------------------------------------|-----------------------------
-`System.Extensions.Core` | [v3.1.0](https://www.nuget.org/packages/System.Extensions.Core)
-`System.Extensions.RazorCompilation` | [v3.1.0](https://www.nuget.org/packages/System.Extensions.RazorCompilation)
+`System.Extensions.Core` | [v3.1.0](https://www.nuget.org/packages/SystemExtensions.Core)
+`System.Extensions.RazorCompilation` | [v3.1.0](https://www.nuget.org/packages/SystemExtensions.RazorCompilation)
 
 ## Get Started
 
