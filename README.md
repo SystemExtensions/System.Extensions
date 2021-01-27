@@ -111,10 +111,10 @@ System.Extensions is licensed under the [MIT](LICENSE) license.
 - [Alipay](https://share.weiyun.com/nMqXbWHU)
 - [PayPal](https://www.paypal.me/zhanghe1024)
 
-return signed USB disk with two year code backup(send receiving address via email)
+return USB disk with two year code backup(send receiving address via email)
 
-- 32G donate over 128RMB(20USD)
-- 64G donate over 256RMB(40USD)
-- 128G donate over 512RMB(80USD)
+- 32G donate over 128RMB(22USD)
+- 64G donate over 256RMB(44USD)
+- 128G donate over 512RMB(88USD)
 
 ___extra payment of postage is required in non mainland China___
