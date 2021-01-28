@@ -7,6 +7,9 @@ namespace System.Reflection
     {
         static void EmitCast(Type typeFrom, Type typeTo, ILGenerator il)
         {
+            if (typeFrom.IsByRef)//TODO
+                return;
+
             if (typeFrom == typeTo)
                 return;
 

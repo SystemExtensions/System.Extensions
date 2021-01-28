@@ -3,6 +3,7 @@ namespace System.IO.Compression
 {
     using System.Linq.Expressions;
     using System.Reflection;
+    using System.Reflection.Emit;
     using System.Runtime.InteropServices;
     public class DeflateDecoder : IDisposable
     {
@@ -24,6 +25,15 @@ namespace System.IO.Compression
             var internalState_ = typeof(DeflateDecoder).GetField("_internalState", BindingFlags.Instance | BindingFlags.NonPublic);
             var availIn_ = typeof(DeflateDecoder).GetField("_availIn", BindingFlags.Instance | BindingFlags.NonPublic);
             var availOut_ = typeof(DeflateDecoder).GetField("_availOut", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            //.NET5 first
+            //internalState.IsInitOnly Expression.Assign(Expression.Field(stream, internalState), Expression.Field(decoder, internalState_)),
+            var setInternalState = new DynamicMethod("SetInternalState", typeof(void), new[] { zStreamType.MakeByRefType(), typeof(IntPtr) });
+            var il = setInternalState.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Stfld, internalState);
+            il.Emit(OpCodes.Ret);
 
             //_Init
             {
@@ -60,7 +70,7 @@ namespace System.IO.Compression
                     Expression.Assign(Expression.Field(stream, nextIn), Expression.Field(decoder, nextIn_)),
                     Expression.Assign(Expression.Field(stream, nextOut), Expression.Field(decoder, nextOut_)),
                     Expression.Assign(Expression.Field(stream, msg), Expression.Field(decoder, msg_)),
-                    Expression.Assign(Expression.Field(stream, internalState), Expression.Field(decoder, internalState_)),
+                    Expression.Call(setInternalState, stream, Expression.Field(decoder, internalState_)),
                     Expression.Assign(Expression.Field(stream, availIn), Expression.Field(decoder, availIn_)),
                     Expression.Assign(Expression.Field(stream, availOut), Expression.Field(decoder, availOut_)),
                     Expression.Assign(errorCode,
@@ -88,7 +98,7 @@ namespace System.IO.Compression
                     Expression.Assign(Expression.Field(stream, nextIn), Expression.Field(decoder, nextIn_)),
                     Expression.Assign(Expression.Field(stream, nextOut), Expression.Field(decoder, nextOut_)),
                     Expression.Assign(Expression.Field(stream, msg), Expression.Field(decoder, msg_)),
-                    Expression.Assign(Expression.Field(stream, internalState), Expression.Field(decoder, internalState_)),
+                    Expression.Call(setInternalState, stream, Expression.Field(decoder, internalState_)),
                     Expression.Assign(Expression.Field(stream, availIn), Expression.Field(decoder, availIn_)),
                     Expression.Assign(Expression.Field(stream, availOut), Expression.Field(decoder, availOut_)),
                     Expression.Convert(
