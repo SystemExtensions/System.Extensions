@@ -113,8 +113,8 @@ System.Extensions is licensed under the [MIT](LICENSE) license.
 
 return USB disk with two year code backup(send receiving address via email)
 
-- 32G donate over 128RMB(22USD)
-- 64G donate over 256RMB(44USD)
-- 128G donate over 512RMB(88USD)
+- 32G donate >= 128RMB(22USD)
+- 64G donate >= 256RMB(44USD)
+- 128G donate >= 512RMB(88USD)
 
 ___extra payment of postage is required in non mainland China___
