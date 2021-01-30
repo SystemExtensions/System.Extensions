@@ -1,7 +1,7 @@
 ﻿System.Extensions
 ============
 
-.NET next generation programming
+Expression Tree programming
 
 ## Packages
 
