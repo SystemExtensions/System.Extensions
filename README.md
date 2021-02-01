@@ -1,8 +1,8 @@
 ﻿System.Extensions
 ============
 
-### 轻量的 Http Https Http2(Server Client Proxy) Json Orm开发框架(无依赖) 可以代替AspNetCore开发
-### 基础库的扩展和重写
+#### 轻量的 Http Https Http2(Server Client Proxy) Json Orm开发框架(无依赖) 可以代替AspNetCore开发
+#### 基础库的扩展和重写
 - **[Url](System.Extensions/System/Url.cs)**, Domain支持,Encode Decode  ReadOnlySpan<char> ReadOnlySequence<char> 支持
 - **[Provider<T>](System.Extensions/System/Provider.cs)**, 对象池,可根据CPU个数创建
 - **[EncodingExtensions](System.Extensions/System/Text/EncodingExtensions.cs)**, 增加GetBytes GetChars GetByteCount GetString API 支持 ReadOnlySequence<char> ReadOnlySequence<byte>
@@ -18,8 +18,8 @@
 - **[TaskTimeoutQueue](System.Extensions/System/Threading/Tasks/TaskTimeoutQueue.cs)**, 基于队列的超时扩展
 - **[...](System.Extensions/System)**
 
-### Light Http Https Http2(Server Client Proxy) Json Orm framework(NO Dependencies) like AspNetCore
-### Extension and rewriting of basic library
+#### Light Http Https Http2(Server Client Proxy) Json Orm framework(NO Dependencies) like AspNetCore
+#### Extension and rewriting of basic library
 - **[Url](System.Extensions/System/Url.cs)**, Domain support,Encode Decode ReadOnlySpan<char> ReadOnlySequence<char> support
 - **[Provider<T>](System.Extensions/System/Provider.cs)**, Object pool,From Processor support
 - **[EncodingExtensions](System.Extensions/System/Text/EncodingExtensions.cs)**,  GetBytes GetChars GetByteCount GetString API for ReadOnlySequence<char> ReadOnlySequence<byte>
@@ -35,11 +35,11 @@
 - **[TaskTimeoutQueue](System.Extensions/System/Threading/Tasks/TaskTimeoutQueue.cs)**, Timeout by Queue 
 - **[...](System.Extensions/System)**
 
-延伸出的基于表达式树的约束编程模式
-Extended expression tree constraint programming
-https://dotnetfiddle.net/fDqsMc
-https://dotnetfiddle.net/uH2dpF
-https://dotnetfiddle.net/46M5mi
+#### 延伸出的基于表达式树的约束编程模式
+#### Extended expression tree constraint programming
+- https://dotnetfiddle.net/fDqsMc
+- https://dotnetfiddle.net/uH2dpF
+- https://dotnetfiddle.net/46M5mi
 
 ## Packages
 
