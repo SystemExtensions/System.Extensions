@@ -13,6 +13,7 @@ namespace BasicSample
     {
         public static void Run() 
         {
+
             JsonReader.Register<long>((reader) =>
             {
                 //if (reader.IsNumber)

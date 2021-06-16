@@ -7,7 +7,7 @@ namespace BasicSample
     {
         static void Main(string[] args)
         {
-            //HttpSample.Run();
+            HttpSample.Run();
             //HandlerCompilerSample.Run();
             //HttpRouterSample.Run();
 

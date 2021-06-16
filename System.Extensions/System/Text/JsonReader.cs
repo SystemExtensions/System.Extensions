@@ -3282,7 +3282,7 @@ namespace System.Text
                 if (_position == _length)
                 {
                     _memoryHandle.Dispose();
-                    if (_value.TryGet(ref _next, out var segment))
+                    if (_value.TryGet(ref _next, out var segment) && segment.Length > 0)//BUG if(segment.Length == 0)
                     {
                         _length = segment.Length;
                         _memoryHandle = segment.Pin();

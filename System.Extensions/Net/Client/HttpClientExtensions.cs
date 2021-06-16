@@ -1892,7 +1892,7 @@ namespace System.Extensions.Http
                         _content = null;
                         _decoder.Dispose();
                     }
-                    else if (status != OperationStatus.NeedMoreData)
+                    else if (status != OperationStatus.DestinationTooSmall)//?
                     {
                         throw new InvalidDataException($"OperationStatus:{status}");
                     }
@@ -1913,7 +1913,7 @@ namespace System.Extensions.Http
                                 _content = null;
                                 _decoder.Dispose();
                             }
-                            else if (status != OperationStatus.NeedMoreData)
+                            else if (status != OperationStatus.DestinationTooSmall)//?
                             {
                                 throw new InvalidDataException($"OperationStatus:{status}");
                             }
@@ -1991,7 +1991,7 @@ namespace System.Extensions.Http
                         _content = null;
                         _decoder.Dispose();
                     }
-                    else if (status != OperationStatus.NeedMoreData)
+                    else if (status != OperationStatus.DestinationTooSmall)//?
                     {
                         throw new InvalidDataException($"OperationStatus:{status}");
                     }
@@ -2012,7 +2012,7 @@ namespace System.Extensions.Http
                                 _content = null;
                                 _decoder.Dispose();
                             }
-                            else if (status != OperationStatus.NeedMoreData)
+                            else if (status != OperationStatus.DestinationTooSmall)//?
                             {
                                 throw new InvalidDataException($"OperationStatus:{status}");
                             }

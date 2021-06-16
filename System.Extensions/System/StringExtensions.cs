@@ -125,6 +125,27 @@ namespace System
             }
             return result;
         }
+        public static string Substring(this string @this,string startString, string endString)
+        {
+            if (@this == null)
+                return null;
+            if (startString == null)
+                return null;
+            if (endString == null)
+                return null;
+
+            var startIndex = @this.IndexOf(startString);
+            if (startIndex == -1)
+                return null;
+
+            startIndex += startString.Length;
+            var endIndex = @this.IndexOf(endString, startIndex);
+
+            if (endIndex == -1)
+                return null;
+
+            return @this.Substring(startIndex, endIndex - startIndex);
+        }
         public static string ToSnakeCase(string name)
         {
             if (name == null)

@@ -6,7 +6,7 @@ namespace System.Buffers
     {
         #region abstract
         public abstract long Length { get; }
-        public abstract ReadOnlySequence<T> Sequence { get; }
+        public abstract ReadOnlySequence<T> Sequence { get; }//last Segment maybe 0
         public abstract Memory<T> GetMemory(int sizeHint = 0);
         public abstract Span<T> GetSpan(int sizeHint = 0);
         public abstract void Advance(int count);

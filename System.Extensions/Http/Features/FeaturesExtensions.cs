@@ -2456,7 +2456,7 @@ namespace System.Extensions.Http
                 sb.Write("<br/>StackTrace: ");
                 sb.Write(ex.StackTrace);
                 response.Content = StringContent.Create(sb.Sequence);
-                response.Headers.Add(HttpHeaders.ContentType, "text/html ;charset=utf-8");
+                response.Headers.Add(HttpHeaders.ContentType, "text/html; charset=utf-8");
                 return Task.CompletedTask;
             }
         }
