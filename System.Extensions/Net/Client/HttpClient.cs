@@ -19,6 +19,8 @@ namespace System.Extensions.Http
         public static HttpClient Default => _Default;
         #endregion
         public abstract Task<HttpResponse> SendAsync(HttpRequest request);
+        //TODO??
+        //Property<HttpClient> Properties { get; }
         public static HttpClient Create(int httpConenctions, int httpsConenctions, int http2Conenctions, int http2Streams)
         {
             if (httpConenctions <= 0)

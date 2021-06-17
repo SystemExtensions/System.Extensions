@@ -120,7 +120,11 @@ namespace System.Data
                     if (get == null || get.ReturnType != type)
                         return null;
 
-                    return Expression.Call(reader, get, i);
+                    //??? IsDBNull OR try catch
+                    return Expression.Condition(
+                        Expression.Call(reader, isDBNull, i),
+                        Expression.Default(type),
+                        Expression.Call(reader, get, i));
                 });
                 //GetValue
                 Register(typeof(object), (reader, i) => Expression.Call(reader, typeof(TDbDataReader).GetMethod("GetValue", new[] { typeof(int) }), i));
