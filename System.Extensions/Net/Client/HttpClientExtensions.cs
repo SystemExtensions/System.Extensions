@@ -11,6 +11,7 @@ namespace System.Extensions.Http
     using System.IO.Compression;
     public static class HttpClientExtensions
     {
+        //TODO ReadJsonAsync(HttpRequest)
         public static async Task SendAsync(this HttpClient @this, HttpRequest request, Action<HttpResponse> handler)
         {
             if (@this == null)
@@ -43,6 +44,78 @@ namespace System.Extensions.Http
             {
                 var response = await @this.SendAsync(request);
                 await handler(response);//TODO? ValueTask
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+        public static async Task<T> ReadJsonAsync<T>(this HttpClient @this, HttpRequest request) 
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            try
+            {
+                var response = await @this.SendAsync(request);
+                var encoding = FeaturesExtensions.GetEncoding(response) ?? Encoding.UTF8;
+                return await response.Content.ReadJsonAsync<T>(encoding);
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+        public static async Task<string> ReadStringAsync(this HttpClient @this, HttpRequest request)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            try
+            {
+                var response = await @this.SendAsync(request);
+                var encoding = FeaturesExtensions.GetEncoding(response) ?? Encoding.UTF8;
+                return await response.Content.ReadStringAsync(encoding);
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+        public static async Task<Stream> ReadStreamAsync(this HttpClient @this, HttpRequest request)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            try
+            {
+                var response = await @this.SendAsync(request);
+                return await response.Content.ReadStreamAsync();
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+        public static async Task<long> ReadFileAsync(this HttpClient @this, HttpRequest request, string path)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (path == null)
+                throw new ArgumentNullException(nameof(path));
+
+            try
+            {
+                var response = await @this.SendAsync(request);
+                return await response.Content.ReadFileAsync(path);
             }
             finally
             {
