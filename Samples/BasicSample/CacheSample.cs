@@ -6,14 +6,17 @@ namespace BasicSample
 {
     public class CacheSample
     {
-        private static Cache<int, string> _Cache1 = new Cache<int, string>();//_Cache1.Collect()
-        private static Cache<int, string> _Cache2 = new Cache<int, string>().Collect(gcGeneration: 0, out _);//GC
-        private static Cache<int, string> _Cache3 = new Cache<int, string>().Collect(TimeSpan.FromSeconds(2), out _);//Timer
+        private static Cache<int, string> _Cache1 = new Cache<int, string>(Environment.ProcessorCount, 1024, -1);//_Cache1.Collect()
+        private static Cache<int, string> _Cache2 = new Cache<int, string>();//GC (1)
         public static void Run() 
         {
             _Cache1.TryAdd(1, "value1", DateTimeOffset.Now.AddMinutes(1));
             _Cache1.TryAdd(2, () => "value2", DateTimeOffset.Now.AddMinutes(2));
             _Cache1.TryAdd(3, () => ("value3", DateTimeOffset.Now.AddDays(3)));
+
+            _Cache1.TryAdd(101, "value101", TimeSpan.FromMinutes(1));
+            _Cache1.TryAdd(102, "value102", TimeSpan.FromMinutes(2));
+            _Cache1.TryAdd(103, "value103", TimeSpan.FromMinutes(3));
 
 
             _Cache1.TryUpdate(1, "newValue1", out var oldValue1);
@@ -58,7 +61,7 @@ namespace BasicSample
             //_Cache1.Clear();
         }
 
-        private static Cache<string, Task<string>> _Cache4 = new Cache<string, Task<string>>().Collect(gcGeneration: 0, out _);
+        private static Cache<string, Task<string>> _Cache4 = new Cache<string, Task<string>>();
         public static async Task RunDataAsync() 
         {
             var key = "USERLIST";

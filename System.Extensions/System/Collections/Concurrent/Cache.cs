@@ -9,12 +9,15 @@ namespace System.Collections.Concurrent
     public class Cache<TKey, TValue>
     {
         public Cache()
-            : this(Environment.ProcessorCount * 8, 60, EqualityComparer<TKey>.Default)
+            : this(Environment.ProcessorCount * 8, 60, 1, EqualityComparer<TKey>.Default)
         { }
         public Cache(int concurrencyLevel, int capacity)
-           : this(concurrencyLevel, capacity, EqualityComparer<TKey>.Default)
+           : this(concurrencyLevel, capacity, 1, EqualityComparer<TKey>.Default)
         { }
-        public Cache(int concurrencyLevel, int capacity, IEqualityComparer<TKey> comparer)
+        public Cache(int concurrencyLevel, int capacity, int generation)
+           : this(concurrencyLevel, capacity, generation, EqualityComparer<TKey>.Default)
+        { }
+        public Cache(int concurrencyLevel, int capacity, int generation, IEqualityComparer<TKey> comparer)
         {
             if (concurrencyLevel <= 0)
                 throw new ArgumentOutOfRangeException(nameof(concurrencyLevel));
@@ -22,7 +25,7 @@ namespace System.Collections.Concurrent
                 throw new ArgumentOutOfRangeException(nameof(capacity));
             if (comparer == null)
                 throw new ArgumentNullException(nameof(comparer));
-
+            
             var count = concurrencyLevel - 1;
             count |= count >> 1;
             count |= count >> 2;
@@ -39,6 +42,9 @@ namespace System.Collections.Concurrent
                 _locks[i] = new SpinLock();
                 _storage[i] = new Storage(capacity, comparer);
             }
+
+            if (generation >= 0 && generation <= GC.MaxGeneration)
+                _gcNotify = new GcNotify(this, generation);
         }
         private class Storage
         {
@@ -1240,6 +1246,55 @@ namespace System.Collections.Concurrent
                         _locks[i].Exit(false);
                     }
                 }
+            }
+        }
+        //TODO? ~Cache
+        private GcNotify _gcNotify;
+        private class GcNotify : IDisposable
+        {
+            //TODO? multiple Obj
+            private int _generation;
+            private Cache<TKey, TValue> _cache;
+            public class Obj
+            {
+                private GcNotify _gcNotify;
+                private int _generation;
+                public Obj(GcNotify gcNotify)
+                {
+                    _gcNotify = gcNotify;
+                    _generation = 0;
+                }
+                ~Obj()
+                {
+                    var gcNotify = _gcNotify;
+                    if (gcNotify == null)
+                        return;
+                    var generation = gcNotify._generation;
+                    var cache = gcNotify._cache;
+                    if (cache == null)
+                        return;
+                    if (_generation > generation)
+                        return;
+                    if (_generation == generation)
+                    {
+                        Debug.WriteLine("GcNotify:Collect");
+                        ThreadPool.QueueUserWorkItem((_) => cache.Collect());
+                        new Obj(gcNotify);
+                        return;
+                    }
+                    GC.ReRegisterForFinalize(this);
+                    _generation = GC.GetGeneration(this);
+                }
+            }
+            public GcNotify(Cache<TKey, TValue> cache, int generation)
+            {
+                _cache = cache;
+                _generation = generation;
+                new Obj(this);
+            }
+            public void Dispose()
+            {
+                _cache = null;
             }
         }
 
