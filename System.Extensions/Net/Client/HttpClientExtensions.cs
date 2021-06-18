@@ -11,7 +11,6 @@ namespace System.Extensions.Http
     using System.IO.Compression;
     public static class HttpClientExtensions
     {
-        //TODO ReadJsonAsync(HttpRequest)
         public static async Task SendAsync(this HttpClient @this, HttpRequest request, Action<HttpResponse> handler)
         {
             if (@this == null)
@@ -44,6 +43,44 @@ namespace System.Extensions.Http
             {
                 var response = await @this.SendAsync(request);
                 await handler(response);//TODO? ValueTask
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+        public static async Task<T> SendAsync<T>(this HttpClient @this, HttpRequest request, Func<HttpResponse, T> handler)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            try
+            {
+                var response = await @this.SendAsync(request);
+                return handler(response);
+            }
+            finally
+            {
+                request.Dispose();
+            }
+        }
+        public static async Task<T> SendAsync<T>(this HttpClient @this, HttpRequest request, Func<HttpResponse, Task<T>> handler)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+            if (handler == null)
+                throw new ArgumentNullException(nameof(handler));
+
+            try
+            {
+                var response = await @this.SendAsync(request);
+                return await handler(response);
             }
             finally
             {

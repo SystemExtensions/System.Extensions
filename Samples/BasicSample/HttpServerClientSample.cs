@@ -500,6 +500,17 @@ namespace BasicSample
                 Console.WriteLine(model.Code);
                 Console.WriteLine(model.Message);
             });
+
+
+            var req6 = new HttpRequest($"{url}/");
+            req6.Headers.Add("MyHeaderName","MyHeaderValue");
+            var string6 = await client.ReadStringAsync(req6);
+
+
+            var req7 = new HttpRequest($"{url}/");
+            var string7 = await client.SendAsync<string>(req7, async (resp) => {
+                return await resp.Content.ReadStringAsync();
+            });
         }
 
         public class ReqModel
