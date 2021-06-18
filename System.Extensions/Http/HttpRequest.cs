@@ -18,6 +18,15 @@ namespace System.Extensions.Http
             _url = new Url(url);
             _headers = new HttpHeaders();
         }
+        public HttpRequest(Url url)
+        {
+            if (url == null)
+                throw new ArgumentNullException(nameof(url));
+
+            _properties = new PropertyCollection<HttpRequest>();
+            _url = url;
+            _headers = new HttpHeaders();
+        }
         //public HttpRequest(Url baseUri, string relativeUri)
         //{
         //    if (baseUri == null)
