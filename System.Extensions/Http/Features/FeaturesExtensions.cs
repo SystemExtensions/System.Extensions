@@ -2423,7 +2423,6 @@ namespace System.Extensions.Http
             }
             else
             {
-                //TODO AggregateException
                 response.StatusCode = ex.StatusCode() ?? 500;
                 var sb = StringContent.Rent(out var disposable);
                 response.RegisterForDispose(disposable);
@@ -2449,12 +2448,29 @@ namespace System.Extensions.Http
                 sb.Write(response.StatusCode);
                 sb.Write(" ");
                 sb.Write(response.ReasonPhrase ?? GetReasonPhrase(response.StatusCode));
-                sb.Write("<br/>Type: ");
-                sb.Write(ex.GetType().ToString());
-                sb.Write("<br/>Message: ");
-                sb.Write(ex.Message);
-                sb.Write("<br/>StackTrace: ");
-                sb.Write(ex.StackTrace);
+                if (ex is AggregateException aggregateEx)
+                {
+                    var innerExceptions = aggregateEx.InnerExceptions;
+                    foreach (var innerException in innerExceptions)
+                    {
+                        sb.Write("<br/>Type: ");
+                        sb.Write(innerException.GetType().ToString());
+                        sb.Write("<br/>Message: ");
+                        sb.Write(innerException.Message);
+                        sb.Write("<br/>StackTrace: ");
+                        sb.Write(innerException.StackTrace);
+                    }
+                }
+                else 
+                {
+                    sb.Write("<br/>Type: ");
+                    sb.Write(ex.GetType().ToString());
+                    sb.Write("<br/>Message: ");
+                    sb.Write(ex.Message);
+                    sb.Write("<br/>StackTrace: ");
+                    sb.Write(ex.StackTrace);
+                }
+                
                 response.Content = StringContent.Create(sb.Sequence);
                 response.Headers.Add(HttpHeaders.ContentType, "text/html; charset=utf-8");
                 return Task.CompletedTask;
