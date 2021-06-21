@@ -15680,6 +15680,7 @@ namespace System.Text
         #endregion
 
         #region Dynamic
+        [DebuggerTypeProxy(typeof(DebugView))]
         private class DynamicValue : DynamicObject
         {
             public static DynamicValue Undefined = new DynamicValue(ValueType.Undefined, null);
@@ -15876,6 +15877,55 @@ namespace System.Text
                         return;
                     case ValueType.Undefined:
                         return;
+                }
+            }
+            private class DebugView
+            {
+                public DebugView(DynamicValue dynamicValue)
+                {
+                    _dynamicValue = dynamicValue;
+                }
+                [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+                private DynamicValue _dynamicValue;
+                [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+                internal object Value => GetValue(_dynamicValue);
+                private static object GetValue(DynamicValue dynamicValue) 
+                {
+                    switch (dynamicValue._valueType)
+                    {
+                        case ValueType.Array:
+                            {
+                                var objValue = new List<object>();
+                                var value = (List<DynamicValue>)dynamicValue._value;
+                                foreach (var item in value)
+                                {
+                                    objValue.Add(GetValue(item));
+                                }
+                                return objValue;
+                            }
+                        case ValueType.Object:
+                            {
+                                var objValue = new Dictionary<string, object>();
+                                var value = (Dictionary<string, DynamicValue>)dynamicValue._value;
+                                foreach (var item in value)
+                                {
+                                    objValue.Add(item.Key, GetValue(item.Value));
+                                }
+                                return objValue;
+                            }
+                        case ValueType.Boolean:
+                            return dynamicValue._value == _True ? true : false;
+                        case ValueType.Null:
+                            return dynamicValue._value;
+                        case ValueType.String:
+                            return dynamicValue._value;
+                        case ValueType.Number:
+                            return dynamicValue._value;
+                        case ValueType.Undefined:
+                            return dynamicValue._value;
+                        default:
+                            return dynamicValue._value;
+                    }
                 }
             }
         }
