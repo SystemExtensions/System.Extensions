@@ -176,6 +176,8 @@ namespace System.Net.Mime
                 { ".mny", "application/x-msmoney" },
                 { ".mov", "video/quicktime" },
                 { ".movie", "video/x-sgi-movie" },
+                { ".m3u","audio/x-mpegurl"},//ADD
+                { ".m3u8","audio/x-mpegurl"},//ADD
                 { ".mp2", "video/mpeg" },
                 { ".mp3", "audio/mpeg" },
                 { ".mp4", "video/mp4" },

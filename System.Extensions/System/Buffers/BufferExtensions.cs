@@ -4,6 +4,9 @@ namespace System.Buffers
     using System.IO;
     using System.Text;
     using System.Reflection.Emit;
+    using System.Diagnostics;
+    using System.Threading;
+    using System.Threading.Tasks;
     public static class BufferExtensions
     {   
         public static int SizeOf<T>() where T : struct
@@ -215,6 +218,18 @@ namespace System.Buffers
             }
         }
         //TODO? WriteLine
+        public static Stream AsStream(this byte[] @this)
+        {
+            return AsStream(@this.AsMemory());
+        }
+        public static Stream AsStream(this ReadOnlyMemory<byte> @this)
+        {
+            return new _MemoryStream(@this);
+        }
+        public static Stream AsStream(this ReadOnlySequence<byte> @this)
+        {
+            return new SequenceStream(@this);
+        }
         #region private
         private static class SizeOfType<T> where T : struct
         {
@@ -257,6 +272,177 @@ namespace System.Buffers
             public override void Write(char[] buffer) => _writer.Write(buffer);
             public override void Write(string value) => _writer.Write(value);
             public override string ToString() => _writer.ToString();
+        }
+        private class _MemoryStream : Stream
+        {
+            public _MemoryStream(ReadOnlyMemory<byte> bytes)
+            {
+                _bytes = bytes;
+                _count = bytes.Length;
+                GC.SuppressFinalize(this);//TODO????
+            }
+            private ReadOnlyMemory<byte> _bytes;
+            private int _count;
+            private int _position;
+            public override bool CanRead => true;
+            public override bool CanWrite => false;
+            public override bool CanSeek => true;
+            public override long Length => _count;
+            public override long Position { get => _position; set => _position = (int)value; }
+            public override int Read(Span<byte> buffer)
+            {
+                if (_position == _count)
+                    return 0;
+
+                var length = buffer.Length;
+                if (length == 0)
+                    return 0;
+
+                var toCopy = _count - _position;
+                if (length < toCopy)
+                    toCopy = length;
+                unsafe
+                {
+                    fixed (byte* pBytes = _bytes.Span, pBuffer = buffer)
+                    {
+                        Buffer.MemoryCopy(pBytes + _position, pBuffer, toCopy, toCopy);
+                    }
+                }
+                _position += toCopy;
+                return toCopy;
+            }
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                return Read(buffer.AsSpan(offset, count));
+            }
+            public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                return new ValueTask<int>(Read(buffer.Span));
+            }
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Read(buffer.AsSpan(offset, count)));
+            }
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                var position = _position;
+                switch (origin)
+                {
+                    case SeekOrigin.Begin:
+                        position = (int)offset;
+                        break;
+                    case SeekOrigin.Current:
+                        position += (int)offset;
+                        break;
+                    case SeekOrigin.End:
+                        position = _count + (int)offset;
+                        break;
+                    default:
+                        throw new NotSupportedException(nameof(origin));
+                }
+
+                if (position < 0 || position >= _count)
+                    throw new ArgumentOutOfRangeException(nameof(offset));
+
+                _position = position;
+                return position;
+            }
+            public override void SetLength(long value) => throw new NotSupportedException(nameof(SetLength));
+            public override void Flush()
+            {
+
+            }
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException(nameof(Write));
+        }
+        private class SequenceStream : Stream
+        {
+            public SequenceStream(ReadOnlySequence<byte> bytes)
+            {
+                _bytes = bytes;
+                _count = bytes.Length;
+                GC.SuppressFinalize(this);//TODO????
+            }
+            private ReadOnlySequence<byte> _bytes;
+            private long _count;
+            private long _position;
+            public override bool CanRead => true;
+            public override bool CanWrite => false;
+            public override bool CanSeek => true;
+            public override long Length => _count;
+            public override long Position { get => _position; set => _position = value; }
+            public override int Read(Span<byte> buffer)
+            {
+                if (_position == _count)
+                    return 0;
+
+                var length = buffer.Length;
+                if (length == 0)
+                    return 0;
+
+                var seq = _bytes.Slice(_position);
+                var bytesSum = 0;
+                foreach (var segm in seq)
+                {
+                    var toCopy = length - bytesSum;
+                    if (toCopy > segm.Length)
+                    {
+                        toCopy = segm.Length;
+                        segm.Span.CopyTo(buffer.Slice(bytesSum));
+                    }
+                    else
+                    {
+                        segm.Span.Slice(0, toCopy).CopyTo(buffer.Slice(bytesSum));
+                        Debug.Assert(bytesSum + toCopy == length);
+                    }
+                    bytesSum += toCopy;
+                    if (bytesSum == length)
+                        break;
+                }
+                _position += bytesSum;
+                return bytesSum;
+            }
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                return Read(buffer.AsSpan(offset, count));
+            }
+            public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+            {
+                return new ValueTask<int>(Read(buffer.Span));
+            }
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            {
+                return Task.FromResult(Read(buffer.AsSpan(offset, count)));
+            }
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                var position = _position;
+                switch (origin)
+                {
+                    case SeekOrigin.Begin:
+                        position = offset;
+                        break;
+                    case SeekOrigin.Current:
+                        position += offset;
+                        break;
+                    case SeekOrigin.End:
+                        position = _count + offset;
+                        break;
+                    default:
+                        throw new NotSupportedException(nameof(origin));
+                }
+
+                if (position < 0 || position >= _count)
+                    throw new ArgumentOutOfRangeException(nameof(offset));
+
+                _position = position;
+                return position;
+            }
+            public override void SetLength(long value) => throw new NotSupportedException(nameof(SetLength));
+            public override void Flush()
+            {
+
+            }
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException(nameof(Write));
         }
         #endregion
 

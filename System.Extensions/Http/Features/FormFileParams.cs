@@ -82,7 +82,27 @@ namespace System.Extensions.Http
             if (_fileCollection.Count > _MaxCapacity)
                 throw new InvalidOperationException(nameof(_MaxCapacity));
         }
-        //TODO?? Stream byte[] ReadOnlySequence<byte>
+        public void Add(string name, string fileName, string contentType, Stream stream)
+        {
+            if (name == null)
+                throw new ArgumentNullException(nameof(name));
+            if (fileName == null)
+                throw new ArgumentNullException(nameof(fileName));
+            if (stream == null)
+                throw new ArgumentNullException(nameof(stream));
+
+            if (stream.Position != 0)
+                throw new ArgumentException("Position Must =0", nameof(stream));
+            var length = stream.Length;
+            if (length < 0)
+                throw new ArgumentException("Length Must >=0", nameof(stream));
+
+            _fileCollection.Add(name, new StreamFile(fileName, contentType, stream, length));
+
+            if (_fileCollection.Count > _MaxCapacity)
+                throw new InvalidOperationException(nameof(_MaxCapacity));
+        }
+        //TODO?? byte[] ReadOnlySequence<byte>
         public void Add(string name, IFormFile file)
         {
             if (name == null)
@@ -206,6 +226,38 @@ namespace System.Extensions.Http
                     throw new InvalidOperationException("fs.Length != _file.Length");
 
                 return fs;
+            }
+            public override string ToString() => FileName;
+        }
+        private class StreamFile : IFormFile
+        {
+            private Stream _stream;
+            private long _length;
+            private string _fileName;
+            private string _contentType;
+            public StreamFile(string fileName, string contentType, Stream stream,long length)
+            {
+                _fileName = fileName;
+                _contentType = contentType;
+                _stream = stream;
+                _length = length;
+            }
+            public long Length => _length;
+            public string FileName => _fileName;
+            public string ContentType => _contentType;
+            public Task SaveAsync(string filePath) 
+            {
+                if (_length == 0)
+                    throw new InvalidOperationException("No Data");
+
+                throw new NotSupportedException(nameof(SaveAsync));
+            }
+            public Stream OpenRead()
+            {
+                if (_stream.Position != 0)
+                    throw new InvalidOperationException("_stream.Position != 0");
+
+                return _stream;
             }
             public override string ToString() => FileName;
         }

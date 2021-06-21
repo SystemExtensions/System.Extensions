@@ -1811,7 +1811,7 @@ namespace System.Extensions.Http
                                 {
                                     if (tempFile == null)
                                     {
-                                        formFileParams.Add(name, fileName, contentType, null);
+                                        formFileParams.Add(name, fileName, contentType, Stream.Null);//?
                                     }
                                     else
                                     {

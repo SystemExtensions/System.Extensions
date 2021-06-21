@@ -1,6 +1,7 @@
 ﻿
 namespace System.IO
 {
+    using System.Diagnostics;
     using System.Reflection;
     using System.Linq.Expressions;
     public static class DirectoryInfoExtensions//TODO? Move FileExtensions
@@ -24,7 +25,7 @@ namespace System.IO
             }
             catch
             {
-                Console.WriteLine(nameof(_GetFile));
+                Trace.WriteLine(nameof(_GetFile));
                 _GetFile = (path, rootPath) =>
                 {
                     var file = new FileInfo(path);
