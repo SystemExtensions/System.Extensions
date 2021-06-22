@@ -220,7 +220,11 @@ namespace System.Buffers
         //TODO? WriteLine
         public static Stream AsStream(this byte[] @this)
         {
-            return AsStream(@this.AsMemory());
+            return new _MemoryStream(@this);
+        }
+        public static Stream AsStream(this Memory<byte> @this)
+        {
+            return new _MemoryStream(@this);
         }
         public static Stream AsStream(this ReadOnlyMemory<byte> @this)
         {
