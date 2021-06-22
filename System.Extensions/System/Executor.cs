@@ -206,7 +206,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task Retry(int maxRetry, Action action, Func<AggregateException, Task> handler = null)
+        public static async Task Retry(int maxRetry, Action action, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -246,7 +246,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task Retry<T>(int maxRetry, Action<T> action, T arg, Func<AggregateException, Task> handler = null)
+        public static async Task Retry<T>(int maxRetry, Action<T> action, T arg, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -286,7 +286,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task Retry<T1, T2>(int maxRetry, Action<T1, T2> action, T1 arg1, T2 arg2, Func<AggregateException, Task> handler = null)
+        public static async Task Retry<T1, T2>(int maxRetry, Action<T1, T2> action, T1 arg1, T2 arg2, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -326,7 +326,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task Retry<T1, T2, T3>(int maxRetry, Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler = null)
+        public static async Task Retry<T1, T2, T3>(int maxRetry, Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -366,7 +366,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task Retry<T1, T2, T3, T4>(int maxRetry, Action<T1, T2, T3, T4> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler = null)
+        public static async Task Retry<T1, T2, T3, T4>(int maxRetry, Action<T1, T2, T3, T4> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -599,7 +599,7 @@ namespace System
             throw new AggregateException("MaxRetry", innerExceptions);
         }
 
-        public static async Task<TResult> Retry<TResult>(int maxRetry, Func<TResult> func, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<TResult>(int maxRetry, Func<TResult> func, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -637,7 +637,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T, TResult>(int maxRetry, Func<T, TResult> func, T arg, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T, TResult>(int maxRetry, Func<T, TResult> func, T arg, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -675,7 +675,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, TResult>(int maxRetry, Func<T1, T2, TResult> func, T1 arg1, T2 arg2, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, TResult>(int maxRetry, Func<T1, T2, TResult> func, T1 arg1, T2 arg2, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -713,7 +713,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, T3, TResult>(int maxRetry, Func<T1, T2, T3, TResult> func, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, T3, TResult>(int maxRetry, Func<T1, T2, T3, TResult> func, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -751,7 +751,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, T3, T4, TResult>(int maxRetry, Func<T1, T2, T3, T4, TResult> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, T3, T4, TResult>(int maxRetry, Func<T1, T2, T3, T4, TResult> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -982,7 +982,7 @@ namespace System
             throw new AggregateException("MaxRetry", innerExceptions);
         }
 
-        public static async Task<TResult> Retry<TResult>(int maxRetry, Func<Task<TResult>> func, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<TResult>(int maxRetry, Func<Task<TResult>> func, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1020,7 +1020,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T, TResult>(int maxRetry, Func<T, Task<TResult>> func, T arg, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T, TResult>(int maxRetry, Func<T, Task<TResult>> func, T arg, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1058,7 +1058,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, TResult>(int maxRetry, Func<T1, T2, Task<TResult>> func, T1 arg1, T2 arg2, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, TResult>(int maxRetry, Func<T1, T2, Task<TResult>> func, T1 arg1, T2 arg2, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1096,7 +1096,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, T3, TResult>(int maxRetry, Func<T1, T2, T3, Task<TResult>> func, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, T3, TResult>(int maxRetry, Func<T1, T2, T3, Task<TResult>> func, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1134,7 +1134,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, T3, T4, TResult>(int maxRetry, Func<T1, T2, T3, T4, Task<TResult>> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, T3, T4, TResult>(int maxRetry, Func<T1, T2, T3, T4, Task<TResult>> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1365,7 +1365,7 @@ namespace System
             throw new AggregateException("MaxRetry", innerExceptions);
         }
 
-        public static async Task<TResult> Retry<TResult>(int maxRetry, Func<ValueTask<TResult>> func, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<TResult>(int maxRetry, Func<ValueTask<TResult>> func, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1403,7 +1403,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T, TResult>(int maxRetry, Func<T, ValueTask<TResult>> func, T arg, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T, TResult>(int maxRetry, Func<T, ValueTask<TResult>> func, T arg, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1441,7 +1441,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, TResult>(int maxRetry, Func<T1, T2, ValueTask<TResult>> func, T1 arg1, T2 arg2, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, TResult>(int maxRetry, Func<T1, T2, ValueTask<TResult>> func, T1 arg1, T2 arg2, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1479,7 +1479,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, T3, TResult>(int maxRetry, Func<T1, T2, T3, ValueTask<TResult>> func, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, T3, TResult>(int maxRetry, Func<T1, T2, T3, ValueTask<TResult>> func, T1 arg1, T2 arg2, T3 arg3, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));
@@ -1517,7 +1517,7 @@ namespace System
             }
             throw new AggregateException("MaxRetry", innerExceptions);
         }
-        public static async Task<TResult> Retry<T1, T2, T3, T4, TResult>(int maxRetry, Func<T1, T2, T3, T4, ValueTask<TResult>> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler = null)
+        public static async Task<TResult> Retry<T1, T2, T3, T4, TResult>(int maxRetry, Func<T1, T2, T3, T4, ValueTask<TResult>> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, Func<AggregateException, Task> handler)
         {
             if (maxRetry < 0)
                 throw new ArgumentOutOfRangeException(nameof(maxRetry));

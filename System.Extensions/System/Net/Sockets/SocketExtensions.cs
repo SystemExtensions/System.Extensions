@@ -1,6 +1,7 @@
 ﻿
 namespace System.Extensions.Net
 {
+    using System.Diagnostics;
     using System.Reflection;
     using System.Linq.Expressions;
     using System.Net.Sockets;
@@ -42,8 +43,8 @@ namespace System.Extensions.Net
             }
             catch
             {
-                Console.WriteLine(nameof(_CleanUp));
-                _CleanUp=(saea)=> { };
+                Trace.WriteLine(nameof(_CleanUp));
+                _CleanUp =(saea)=> { };
             }
         }
 

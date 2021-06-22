@@ -83,5 +83,7 @@ namespace System.Data
         {
             throw new InvalidOperationException(nameof(NotEquals));
         }
+
+        //TODO? Now()
     }
 }

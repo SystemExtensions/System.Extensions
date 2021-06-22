@@ -3063,6 +3063,89 @@ namespace System.Extensions.Http
                 disposable.Dispose();
             }
         }
+
+        //TODO??? AddRange
+
+        //TODO?? ToString Sort OR Sort
+        //public static string ToString(this IQueryParams @this, IComparer<string> comparer)
+        //{
+        //    if (@this == null)
+        //        throw new ArgumentNullException(nameof(@this));
+        //    if (comparer == null)
+        //        throw new ArgumentNullException(nameof(comparer));
+        //    if (@this.Count == 0)
+        //        return string.Empty;
+
+        //    var count = @this.Count;
+        //    var keys = new string[count];
+        //    var values = new string[count];
+        //    for (int i = 0; i < count; i++)
+        //    {
+        //        var item = @this[i];
+        //        keys[i] = item.Key;
+        //        values[i] = item.Value;
+        //    }
+        //    Array.Sort(keys, values, comparer);
+        //    var sb = StringExtensions.ThreadRent(out var disposable);
+        //    try
+        //    {
+        //        sb.Write(keys[0]);
+        //        sb.Write('=');
+        //        sb.Write(values[0]);
+        //        for (int i = 1; i < count; i++)
+        //        {
+        //            sb.Write('&');
+        //            sb.Write(keys[i]);
+        //            sb.Write('=');
+        //            sb.Write(values[i]);
+        //        }
+        //        return sb.ToString();
+        //    }
+        //    finally
+        //    {
+        //        disposable.Dispose();
+        //    }
+        //}
+        //public static string ToString(this IFormParams @this, IComparer<string> comparer)
+        //{
+        //    if (@this == null)
+        //        throw new ArgumentNullException(nameof(@this));
+        //    if (comparer == null)
+        //        throw new ArgumentNullException(nameof(comparer));
+        //    if (@this.Count == 0)
+        //        return string.Empty;
+
+        //    var count = @this.Count;
+        //    var keys = new string[count];
+        //    var values = new string[count];
+        //    for (int i = 0; i < count; i++)
+        //    {
+        //        var item = @this[i];
+        //        keys[i] = item.Key;
+        //        values[i] = item.Value;
+        //    }
+        //    Array.Sort(keys, values, comparer);
+        //    var sb = StringExtensions.ThreadRent(out var disposable);
+        //    try
+        //    {
+        //        sb.Write(keys[0]);
+        //        sb.Write('=');
+        //        sb.Write(values[0]);
+        //        for (int i = 1; i < count; i++)
+        //        {
+        //            sb.Write('&');
+        //            sb.Write(keys[i]);
+        //            sb.Write('=');
+        //            sb.Write(values[i]);
+        //        }
+        //        return sb.ToString();
+        //    }
+        //    finally
+        //    {
+        //        disposable.Dispose();
+        //    }
+        //}
+
         public static void Parse(this QueryParams @this, ReadOnlySpan<char> query)
         {
             Parse(@this, query, Encoding.UTF8);
