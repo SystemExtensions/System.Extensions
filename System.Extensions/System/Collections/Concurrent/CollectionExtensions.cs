@@ -74,5 +74,64 @@ namespace System.Collections.Concurrent
         {
             return @this.GetOrAdd(key, () => Task.Run(valueFactory), expire);
         }
+
+
+        public static bool TryAdd<TValue>(this Cache<TValue> @this, TValue value, TimeSpan expire)
+        {
+            return @this.TryAdd(value, DateTimeOffset.Now.Add(expire));
+        }
+        public static bool TryAdd<TValue>(this Cache<TValue> @this, Func<TValue> valueFactory, TimeSpan expire)
+        {
+            return @this.TryAdd(valueFactory, DateTimeOffset.Now.Add(expire));
+        }
+        public static bool TryUpdate<TValue>(this Cache<TValue> @this, TimeSpan expire, out TValue value)
+        {
+            return @this.TryUpdate(DateTimeOffset.Now.Add(expire), out value);
+        }
+        public static bool TryUpdate<TValue>(this Cache<TValue> @this, TValue newValue, TimeSpan expire, out TValue value)
+        {
+            return @this.TryUpdate(newValue, DateTimeOffset.Now.Add(expire), out value);
+        }
+        public static bool TryUpdate<TValue>(this Cache<TValue> @this, Func<TValue, TValue> newValueFactory, TimeSpan expire, out TValue value)
+        {
+            return @this.TryUpdate(newValueFactory, DateTimeOffset.Now.Add(expire), out value);
+        }
+        public static TValue AddOrUpdate<TValue>(this Cache<TValue> @this, TValue value, TimeSpan expire)
+        {
+            return @this.AddOrUpdate(value, DateTimeOffset.Now.Add(expire));
+        }
+        public static TValue AddOrUpdate<TValue>(this Cache<TValue> @this, TValue value, TimeSpan expire, Func<TValue, TValue> newValueFactory)
+        {
+            return @this.AddOrUpdate(value, DateTimeOffset.Now.Add(expire), newValueFactory);
+        }
+        public static TValue GetOrAdd<TValue>(this Cache<TValue> @this, TValue value, TimeSpan expire)
+        {
+            return @this.GetOrAdd(value, DateTimeOffset.Now.Add(expire));
+        }
+        public static TValue GetOrAdd<TValue>(this Cache<TValue> @this, Func<TValue> valueFactory, TimeSpan expire)
+        {
+            return @this.GetOrAdd(valueFactory, DateTimeOffset.Now.Add(expire));
+        }
+        public static bool TryRemove<TValue>(this Cache<TValue> @this)
+        {
+            return @this.TryRemove(out _);
+        }
+
+        public static Task<TValue> GetOrAddAsync<TValue>(this Cache<Task<TValue>> @this, Func<Task<TValue>> valueFactory, DateTimeOffset expire)
+        {
+            return @this.GetOrAdd(() => Task.Run(valueFactory), expire);
+        }
+        public static Task<TValue> GetOrAddAsync<TValue>(this Cache<Task<TValue>> @this, Func<TValue> valueFactory, DateTimeOffset expire)
+        {
+            return @this.GetOrAdd(() => Task.Run(valueFactory), expire);
+        }
+        public static Task<TValue> GetOrAddAsync<TValue>(this Cache<Task<TValue>> @this, Func<Task<TValue>> valueFactory, TimeSpan expire)
+        {
+            return @this.GetOrAdd(() => Task.Run(valueFactory), expire);
+        }
+        public static Task<TValue> GetOrAddAsync<TValue>(this Cache<Task<TValue>> @this, Func<TValue> valueFactory, TimeSpan expire)
+        {
+            return @this.GetOrAdd(() => Task.Run(valueFactory), expire);
+        }
     }
 }

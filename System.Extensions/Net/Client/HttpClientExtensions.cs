@@ -808,6 +808,65 @@ namespace System.Extensions.Http
                 }
             });
         }
+        public static HttpResponse UseCompression(this HttpResponse @this)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (@this.Content == null)
+                return @this;
+
+            if (@this.Headers.TryGetValue(HttpHeaders.ContentEncoding, out var contentEncoding))
+            {
+                if ("gzip".EqualsIgnoreCase(contentEncoding))
+                {
+                    var content = new DeflateDecoderContent(@this.Content, new DeflateDecoder(31));
+                    @this.RegisterForDispose(content);
+                    @this.Content = content;
+                }
+                else if ("deflate".EqualsIgnoreCase(contentEncoding))
+                {
+                    var content = new DeflateDecoderContent(@this.Content, new DeflateDecoder(15));
+                    @this.RegisterForDispose(content);
+                    @this.Content = content;
+                }
+                else if ("br".EqualsIgnoreCase(contentEncoding))
+                {
+                    var content = new BrotliDecoderContent(@this.Content, new BrotliDecoder());
+                    @this.RegisterForDispose(content);
+                    @this.Content = content;
+                }
+                else
+                {
+                    throw new NotSupportedException($"ContentEncoding:{contentEncoding}");
+                }
+            }
+
+            return @this;
+        }
+        public static HttpResponse UseCompression(this HttpResponse @this, DeflateDecoder decoder)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (@this.Content == null)
+                return @this;
+
+            var content = new DeflateDecoderContent(@this.Content, decoder);
+            @this.RegisterForDispose(content);
+            @this.Content = content;
+            return @this;
+        }
+        public static HttpResponse UseCompression(this HttpResponse @this, BrotliDecoder decoder)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+            if (@this.Content == null)
+                return @this;
+
+            var content = new BrotliDecoderContent(@this.Content, decoder);
+            @this.RegisterForDispose(content);
+            @this.Content = content;
+            return @this;
+        }
         public static HttpClient UseTimeout(this HttpClient @this)
         {
             if (@this == null)

@@ -1367,4 +1367,399 @@ namespace System.Collections.Concurrent
             }
         }
     }
+    public class Cache<TValue>
+    {
+        //TODO?? public Cache(int generation)
+        public Cache()
+        {
+            _lock = new SpinLock();
+            _value = default;
+            _expire = DateTimeOffset.MinValue;
+        }
+
+        private SpinLock _lock;
+        private TValue _value;
+        private DateTimeOffset _expire;
+        public bool TryAdd(TValue value, DateTimeOffset expire)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    _value = value;
+                    _expire = expire;
+                    return true;
+                }
+                return false;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryAdd(Func<TValue> valueFactory, DateTimeOffset expire)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    _value = valueFactory();
+                    _expire = expire;
+                    return true;
+                }
+                return false;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryAdd(Func<(TValue, DateTimeOffset)> factory)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    (var value, var expire) = factory();
+                    _value = value;
+                    _expire = expire;
+                    return true;
+                }
+                return false;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryUpdate(TValue newValue, out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                value = _value;
+                _value = newValue;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryUpdate(Func<TValue, TValue> newValueFactory, out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                var newValue = newValueFactory(_value);
+                value = _value;
+                _value = newValue;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryUpdate(DateTimeOffset expire, out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                _expire = expire;
+                value = _value;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryUpdate(TValue newValue, DateTimeOffset expire, out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                value = _value;
+                _value = newValue;
+                _expire = expire;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryUpdate(Func<TValue, TValue> newValueFactory, DateTimeOffset expire, out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                var newValue = newValueFactory(_value);
+                value = _value;
+                _value = newValue;
+                _expire = expire;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryUpdate(Func<TValue, DateTimeOffset, (TValue, DateTimeOffset)> newFactory, out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                (var newValue, var expire) = newFactory(_value, _expire);
+                value = _value;
+                _value = newValue;
+                _expire = expire;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryRemove(out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                value = _value;
+                _value = default;
+                _expire = DateTimeOffset.MinValue;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public bool TryGetValue(out TValue value)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    value = default;
+                    return false;
+                }
+                value = _value;
+                return true;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public TValue AddOrUpdate(TValue value, DateTimeOffset expire)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                _value = value;
+                _expire = expire;
+                return value;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public TValue AddOrUpdate(TValue value, DateTimeOffset expire, Func<TValue, TValue> newValueFactory)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    _value = value;
+                    _expire = expire;
+                    return value;
+                }
+                var newValue = newValueFactory(_value);
+                _value = newValue;
+                _expire = expire;
+                return value;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public TValue AddOrUpdate(Func<(TValue, DateTimeOffset)> factory, Func<TValue, DateTimeOffset, (TValue, DateTimeOffset)> newFactory)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    (var value, var expire) = factory();
+                    _value = value;
+                    _expire = expire;
+                    return value;
+                }
+                else
+                {
+                    (var newValue, var expire) = newFactory(_value, _expire);
+                    _value = newValue;
+                    _expire = expire;
+                    return newValue;
+                }
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public TValue GetOrAdd(TValue value, DateTimeOffset expire)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    _value = value;
+                    _expire = expire;
+                    return value;
+                }
+                return _value;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public TValue GetOrAdd(Func<TValue> valueFactory, DateTimeOffset expire)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    var value = valueFactory();
+                    _value = value;
+                    _expire = expire;
+                    return value;
+                }
+                return _value;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public TValue GetOrAdd(Func<(TValue, DateTimeOffset)> factory)
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    (var value, var expire) = factory();
+                    _value = value;
+                    _expire = expire;
+                    return value;
+                }
+                return _value;
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+        public void Collect()
+        {
+            var lockTaken = false;
+            try
+            {
+                _lock.Enter(ref lockTaken);
+                if (_expire < DateTimeOffset.Now)
+                {
+                    _value = default;
+                    _expire = DateTimeOffset.MinValue;
+                }
+            }
+            finally
+            {
+                Debug.Assert(lockTaken);
+                _lock.Exit(false);
+            }
+        }
+    }
 }
