@@ -2529,7 +2529,7 @@ namespace System.Extensions.Http
             }
             return @this;
         }
-        public static HttpResponse UseCookie(this HttpResponse @this, string name, string value, string domain = null, int? maxAge = null, string path = "/", bool httpOnly = false, bool secure = false)
+        public static HttpResponse UseCookie(this HttpResponse @this, string name, string value, string domain = null, int? maxAge = null, string path = "/", bool httpOnly = false, bool secure = false, string sameSite = null)
         {
             if (@this == null)
                 throw new ArgumentNullException(nameof(@this));
@@ -2556,7 +2556,14 @@ namespace System.Extensions.Http
                     sb.Write("; Secure");
                 if (httpOnly)
                     sb.Write("; HttpOnly");
-                //TODO?? SameSite Strict Lax None
+
+                //SameSite Strict Lax None
+                if (sameSite != null)
+                {
+                    sb.Write("; SameSite=");
+                    sb.Write(sameSite);
+                }
+
                 @this.Headers.Add(HttpHeaders.SetCookie, sb.ToString());
             }
             finally

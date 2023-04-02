@@ -169,6 +169,17 @@ namespace System.Data
             return (SqlDb)ctor.Invoke(new object[] { typeof(TDbConnection), getCommand, cmdExecuting });
         }
 
+        //临时 TODO 优化
+        //private static Func<Type, ParameterExpression, Expression> _OnResultExecuted;
+        //public static void Read(Func<Type, ParameterExpression, Expression> onResultExecuted) 
+        //{
+        //    _OnResultExecuted = onResultExecuted;
+        //}
+        //public static void Read(Type type, ParameterExpression value, out Expression expression)
+        //{
+        //    expression = _OnResultExecuted?.Invoke(type, value);
+        //}
+
         #region abstract
         public abstract int Execute(string sql);
         public abstract int Execute(string sql, object parameters);
@@ -219,12 +230,12 @@ namespace System.Data
         public abstract Task<List<TEntity>> SelectAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
         public abstract (List<TEntity>, int) SelectPaged<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
         public abstract Task<(List<TEntity>, int)> SelectPagedAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
-        public abstract TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
-        public abstract Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
-        public abstract TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
-        public abstract Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
-        public abstract (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
-        public abstract Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
+        public abstract TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
+        public abstract Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
+        public abstract TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
+        public abstract Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy);
+        public abstract (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
+        public abstract Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy);
         #endregion
 
         #region SqlServerDb
@@ -473,6 +484,7 @@ namespace System.Data
                 {
                     _entities = new Dictionary<ParameterExpression, DbEntity>();
                 }
+
                 public DbEntity Add(ParameterExpression parameter)
                 {
                     var entity = new DbEntity()
@@ -1083,7 +1095,7 @@ namespace System.Data
             public static string Select(LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters, DbEntityContext context)
             {
                 var sql = new List<string>();
-                var entity = context.Add(select.Parameters[0]);
+                var entity = context.Add(select.Parameters[0]);//context.Add(select, parameters, context)
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -1110,7 +1122,8 @@ namespace System.Data
                 }
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -1155,7 +1168,8 @@ namespace System.Data
                     sql.Add($" FETCH NEXT {fetch} ROWS ONLY");
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -1618,11 +1632,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -1653,11 +1673,18 @@ namespace System.Data
                 sql.Add(";SELECT COUNT(1)");
                 return sql.Concat((selectIndex, countIndex), (0, selectIndex), (countIndex, sql.Count), (fromIndex, countIndex), (0, whereIndex));
             }
-            public static string Select(LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
+
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -1696,11 +1723,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -2560,7 +2593,7 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.Execute<List<TEntity>, int>(sql, parameters);
             }
             public override Task<(List<TEntity>, int)> SelectPagedAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
@@ -2569,61 +2602,61 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.ExecuteAsync<List<TEntity>, int>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.Execute<TResult, int>(sql, parameters);
             }
-            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.ExecuteAsync<TResult, int>(sql, parameters);
             }
         }
@@ -3512,7 +3545,8 @@ namespace System.Data
                 }
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -3555,7 +3589,8 @@ namespace System.Data
                 sql.Add($" LIMIT {offset},{fetch}");
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -4018,11 +4053,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -4053,11 +4094,17 @@ namespace System.Data
                 sql.Add(";SELECT COUNT(1)");
                 return sql.Concat((selectIndex, countIndex), (0, selectIndex), (countIndex, sql.Count), (fromIndex, countIndex), (0, whereIndex));
             }
-            public static string Select(LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -4096,11 +4143,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -4954,7 +5007,7 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.Execute<List<TEntity>, int>(sql, parameters);
             }
             public override Task<(List<TEntity>, int)> SelectPagedAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
@@ -4963,61 +5016,61 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.ExecuteAsync<List<TEntity>, int>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.Execute<TResult, int>(sql, parameters);
             }
-            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.ExecuteAsync<TResult, int>(sql, parameters);
             }
         }
@@ -5907,7 +5960,8 @@ namespace System.Data
                 }
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -5950,7 +6004,8 @@ namespace System.Data
                 sql.Add($" OFFSET {offset} ROWS FETCH NEXT {fetch} ROWS ONLY");
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -6423,7 +6478,7 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 //OracleDbType.RefCursor = 121
                 var cursor1 = Query.GetParameter(parameters.Count);
@@ -6433,6 +6488,12 @@ namespace System.Data
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -6469,11 +6530,17 @@ namespace System.Data
                 sql.Add(";END;");
                 return sql.Concat((selectIndex, countIndex), (0, selectIndex), (countIndex, endIndex), (fromIndex, countIndex), (0, whereIndex), (endIndex, sql.Count));
             }
-            public static string Select(LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -6512,11 +6579,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -7386,7 +7459,7 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.Execute<List<TEntity>, int>(sql, parameters);
             }
             public override Task<(List<TEntity>, int)> SelectPagedAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
@@ -7395,61 +7468,61 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.ExecuteAsync<List<TEntity>, int>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.Execute<TResult, int>(sql, parameters);
             }
-            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.ExecuteAsync<TResult, int>(sql, parameters);
             }
         }
@@ -8338,7 +8411,8 @@ namespace System.Data
                 }
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -8381,7 +8455,8 @@ namespace System.Data
                 sql.Add($" OFFSET {offset} LIMIT {fetch}");
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -8846,11 +8921,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -8881,11 +8962,17 @@ namespace System.Data
                 sql.Add(";SELECT COUNT(1)");
                 return sql.Concat((selectIndex, countIndex), (0, selectIndex), (countIndex, sql.Count), (fromIndex, countIndex), (0, whereIndex));
             }
-            public static string Select(LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -8924,11 +9011,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -9782,7 +9875,7 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.Execute<List<TEntity>, int>(sql, parameters);
             }
             public override Task<(List<TEntity>, int)> SelectPagedAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
@@ -9791,61 +9884,61 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.ExecuteAsync<List<TEntity>, int>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.Execute<TResult, int>(sql, parameters);
             }
-            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.ExecuteAsync<TResult, int>(sql, parameters);
             }
         }
@@ -10734,7 +10827,8 @@ namespace System.Data
                 }
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -10777,7 +10871,8 @@ namespace System.Data
                 sql.Add($" LIMIT {offset},{fetch}");
                 var index = sql.Count;
                 sql.Add("SELECT ");
-                Convert(select.Body, sql, parameters, context);
+                Select(select.Body, sql, parameters, context);
+                //Convert(select.Body, sql, parameters, context);
 
                 sql.Add(" FROM ");
                 sql.Add(entity.Table.Name);
@@ -11240,11 +11335,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string SelectPaged(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -11275,11 +11376,17 @@ namespace System.Data
                 sql.Add(";SELECT COUNT(1)");
                 return sql.Concat((selectIndex, countIndex), (0, selectIndex), (countIndex, sql.Count), (fromIndex, countIndex), (0, whereIndex));
             }
-            public static string Select(LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -11318,11 +11425,17 @@ namespace System.Data
                 }
                 return sql.Concat((index, sql.Count), (0, index));
             }
-            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
+            public static string Select(int offset, int fetch, LambdaExpression select, LambdaExpression from, LambdaExpression where, LambdaExpression groupBy, LambdaExpression having, LambdaExpression orderBy, List<(string, object)> parameters)
             {
                 var sql = CommandText;
                 var context = new DbEntityContext();
                 var entity = context.Add(select.Parameters[0]);
+                if (from != null)
+                {
+                    var fromSql = new List<string>();
+                    Convert(from.Body, fromSql, parameters, context);
+                    entity.Table.Name = fromSql.Concat();
+                }
                 if (where != null)
                 {
                     context.Add(where.Parameters[0], entity);
@@ -12176,7 +12289,7 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.Execute<List<TEntity>, int>(sql, parameters);
             }
             public override Task<(List<TEntity>, int)> SelectPagedAsync<TEntity>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, TEntity>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
@@ -12185,61 +12298,61 @@ namespace System.Data
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, null, where, orderBy, parameters);
                 return this.ExecuteAsync<List<TEntity>, int>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override TResult Select<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.Execute<TResult>(sql, parameters);
             }
-            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<TResult> SelectAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Func<TEntity, SqlExpression, object>> groupBy, Expression<Func<TEntity, SqlExpression, bool>> having, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = Select(offset, fetch, select, where, groupBy, having, orderBy, parameters);
+                var sql = Select(offset, fetch, select, from, where, groupBy, having, orderBy, parameters);
                 return this.ExecuteAsync<TResult>(sql, parameters);
             }
-            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override (TResult, int) SelectPaged<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.Execute<TResult, int>(sql, parameters);
             }
-            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+            public override Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<SqlExpression, object>> from, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
             {
                 if (select == null)
                     throw new ArgumentNullException(nameof(select));
 
                 var parameters = Parameters;
-                var sql = SelectPaged(offset, fetch, select, where, orderBy, parameters);
+                var sql = SelectPaged(offset, fetch, select, from, where, orderBy, parameters);
                 return this.ExecuteAsync<TResult, int>(sql, parameters);
             }
         }

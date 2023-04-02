@@ -1589,6 +1589,8 @@ namespace System.Data
         {
             throw new InvalidOperationException(nameof(Select));
         }
+
+        //TODO Select(out from)
         public static bool TrySelect(MethodCallExpression expression, out Expression select)
         {
             if (expression.Method == _Select1)
@@ -2439,28 +2441,40 @@ namespace System.Data
         }
         public static TResult Select<TEntity, TResult>(this SqlDb @this, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where)
         {
-            return @this.Select<TEntity, TResult>(select, where, null, null, null);
+            return @this.Select<TEntity, TResult>(select, null, where, null, null, null);
         }
         public static TResult Select<TEntity, TResult>(this SqlDb @this, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
         {
-            return @this.Select<TEntity, TResult>(select, where, null, null, orderBy);
+            return @this.Select<TEntity, TResult>(select, null, where, null, null, orderBy);
         }
+
+
         public static Task<TResult> SelectAsync<TEntity, TResult>(this SqlDb @this, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where)
         {
-            return @this.SelectAsync<TEntity, TResult>(select, where, null, null, null);
+            return @this.SelectAsync<TEntity, TResult>(select, null, where, null, null, null);
         }
         public static Task<TResult> SelectAsync<TEntity, TResult>(this SqlDb @this, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
         {
-            return @this.SelectAsync<TEntity, TResult>(select, where, null, null, orderBy);
+            return @this.SelectAsync<TEntity, TResult>(select, null, where, null, null, orderBy);
         }
         public static TResult Select<TEntity, TResult>(this SqlDb @this, int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
         {
-            return @this.Select<TEntity, TResult>(offset, fetch, select, where, null, null, orderBy);
+            return @this.Select<TEntity, TResult>(offset, fetch, select, null, where, null, null, orderBy);
         }
         public static Task<TResult> SelectAsync<TEntity, TResult>(this SqlDb @this, int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
         {
-            return @this.SelectAsync<TEntity, TResult>(offset, fetch, select, where, null, null, orderBy);
+            return @this.SelectAsync<TEntity, TResult>(offset, fetch, select, null, where, null, null, orderBy);
         }
+
+        public static (TResult, int) SelectPaged<TEntity, TResult>(this SqlDb @this, int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy) 
+        {
+            return @this.SelectPaged<TEntity, TResult>(offset, fetch, select, null, where, orderBy);
+        }
+        public static Task<(TResult, int)> SelectPagedAsync<TEntity, TResult>(this SqlDb @this, int offset, int fetch, Expression<Func<TEntity, SqlExpression, object>> select, Expression<Func<TEntity, SqlExpression, bool>> where, Expression<Action<TEntity, SqlExpression>> orderBy)
+        {
+            return @this.SelectPagedAsync<TEntity, TResult>(offset, fetch, select, null, where, orderBy);
+        }
+
         //Transaction
         public static void Execute(this ITransactionFactory @this, Action transactionAction)
         {

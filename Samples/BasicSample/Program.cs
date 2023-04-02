@@ -5,6 +5,7 @@ namespace BasicSample
 {
     class Program
     {
+
         static void Main(string[] args)
         {
             //HttpSample.Run();
@@ -46,7 +47,7 @@ namespace BasicSample
 
 
             //JsonWriterSample.Run();
-            JsonReaderSample.Run();
+            //JsonReaderSample.Run();
 
 
             //CompressionSample.RunGzip();
