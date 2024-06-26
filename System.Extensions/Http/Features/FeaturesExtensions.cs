@@ -3153,6 +3153,54 @@ namespace System.Extensions.Http
         //    }
         //}
 
+        public static string Unescape(string value)//兼容\u编码
+        {
+            if (value == null)
+                return string.Empty;
+
+            var dataString = Uri.UnescapeDataString(value);
+            var sb = new StringBuilder();
+            var pos = 0;
+            for (; pos < dataString.Length;)
+            {
+                var temp = dataString[pos];
+                if (temp == '%')
+                {
+                    if (pos + 5 < dataString.Length)
+                    {
+                        if (dataString[pos + 1] == 'u')
+                        {
+                            try
+                            {
+                                var u = Convert.ToInt32(dataString.Substring(pos + 2, 4), 16);
+
+                                sb.Append((char)u);
+                                pos += 6;
+                                continue;
+                            }
+                            catch (Exception)
+                            {
+                            }
+                        }
+                    }
+                }
+                sb.Append(temp);
+                pos += 1;
+            }
+
+            return sb.ToString();
+        }
+        public static string Unescape(ReadOnlySpan<char> charsToDecode, Encoding encoding)
+        {
+            try
+            {
+                return Url.Decode(charsToDecode, encoding);
+            }
+            catch
+            {
+                return Unescape(new string(charsToDecode));
+            }
+        }
         public static void Parse(this QueryParams @this, ReadOnlySpan<char> query)
         {
             Parse(@this, query, Encoding.UTF8);
@@ -3177,7 +3225,7 @@ namespace System.Extensions.Http
                 {
                     if (queryName == null)
                     {
-                        queryName = Url.Decode(query.Slice(tempOffset, i - tempOffset), encoding);
+                        queryName = Unescape(query.Slice(tempOffset, i - tempOffset), encoding);
                         tempOffset = i + 1;
                     }
                 }
@@ -3185,12 +3233,12 @@ namespace System.Extensions.Http
                 {
                     if (queryName == null)
                     {
-                        queryName = Url.Decode(query.Slice(tempOffset, i - tempOffset), encoding);
+                        queryName = Unescape(query.Slice(tempOffset, i - tempOffset), encoding);
                         @this.Add(queryName, string.Empty);
                     }
                     else
                     {
-                        string queryValue = Url.Decode(query.Slice(tempOffset, i - tempOffset), encoding);
+                        string queryValue = Unescape(query.Slice(tempOffset, i - tempOffset), encoding);
                         @this.Add(queryName, queryValue);
                     }
                     tempOffset = i + 1;
@@ -3245,7 +3293,7 @@ namespace System.Extensions.Http
                 {
                     if (cookieName == null)
                     {
-                        cookieName = Url.Decode(cookie.Slice(tempOffset, i - tempOffset), encoding);
+                        cookieName = Unescape(cookie.Slice(tempOffset, i - tempOffset), encoding);
                         tempOffset = i + 1;
                     }
                 }
@@ -3253,12 +3301,12 @@ namespace System.Extensions.Http
                 {
                     if (cookieName == null)
                     {
-                        cookieName = Url.Decode(cookie.Slice(tempOffset, i - tempOffset), encoding);
+                        cookieName = Unescape(cookie.Slice(tempOffset, i - tempOffset), encoding);
                         @this.Add(cookieName, string.Empty);
                     }
                     else
                     {
-                        string cookieValue = Url.Decode(cookie.Slice(tempOffset, i - tempOffset), encoding);
+                        string cookieValue = Unescape(cookie.Slice(tempOffset, i - tempOffset), encoding);
                         @this.Add(cookieName, cookieValue);
                     }
                     cookieName = null;
@@ -3272,12 +3320,12 @@ namespace System.Extensions.Http
 
             if (cookieName == null)
             {
-                cookieName = Url.Decode(cookie.Slice(tempOffset), encoding);
+                cookieName = Unescape(cookie.Slice(tempOffset), encoding);
                 @this.Add(cookieName, string.Empty);
             }
             else
             {
-                string cookieValue = Url.Decode(cookie.Slice(tempOffset), encoding);
+                string cookieValue = Unescape(cookie.Slice(tempOffset), encoding);
                 @this.Add(cookieName, cookieValue);
             }
         }
