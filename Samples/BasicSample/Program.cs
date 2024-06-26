@@ -23,6 +23,7 @@ namespace BasicSample
             //HttpServerClientSample.RunUnixDomainSocket();
             //HttpServerClientSample.RunParallelClient();
             //HttpServerClientSample.RunIPv6();
+            HttpServerClientSample.RunWebSocket();
 
 
             //HttpProxySample.RunHttp();

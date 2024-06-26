@@ -9,6 +9,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Extensions.Http;
 using System.Extensions.Net;
+using System.Buffers;
+using System.Net.WebSockets;
+using System.Diagnostics;
 
 namespace BasicSample
 {
@@ -353,6 +356,62 @@ namespace BasicSample
             Run(_Client21, "http://127.0.0.1:9199").Wait();
         }
 
+        public static void RunWebSocket()
+        {
+            var httpSvr = new TcpServer(9999);
+            httpSvr.UseHttp((options, router) => {
+
+                router.MapGet("/chat", (req, resp) =>
+                {
+                    resp.UseWebSocket(req, TimeSpan.FromSeconds(5), async (ws) =>
+                    {
+                        //读取消息
+                        await Task.Run(async () =>
+                        {
+                            var buffer = Buffer<byte>.Create(8192);
+                            for (; ; )
+                            {
+                                buffer.Clear();
+                                var msgType = await ws.ReceiveAsync(buffer);
+
+                                if (msgType == WebSocketMessageType.Text)
+                                {
+                                    var text = Encoding.UTF8.GetString(buffer.Sequence);
+                                    Debug.WriteLine(text);
+                                }
+                            }
+                        });
+                    });
+
+                });
+
+            });
+            httpSvr.Start();
+
+            var ws = WebSocketExtensions.ConnectAsync("ws://127.0.0.1:9999/chat").Result;
+
+            Task.Run(async () =>
+            {
+                for (int i = 0; i < 100000; i++)
+                {
+                    try
+                    {
+                        var text = new string('A', 33);
+
+                        await ws.SendAsync($"{i}-{text}-B");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine(ex.Message);
+                        ws.Dispose();
+                    }
+
+                    await Task.Delay(1000);
+                }
+
+            });
+
+        }
 
         private static void MapRouter(HttpRouter router)
         {

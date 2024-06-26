@@ -1836,6 +1836,23 @@ namespace System.Extensions.Net
                             {
                                 await WriteAsync();
                             }
+
+                            //_connectionHandler=_response.ConnectionHandler();
+
+                            if (_connectionClose || !Connected)//TODO http1.0 close too fast 
+                                return;
+
+                            //协议变换
+                            var connectionHandler = _response.ConnectionHandler();
+
+                            if (connectionHandler != null)
+                            {
+                                if (_end - _start > 0)
+                                    throw new NotSupportedException("Pipeline");
+
+                                await connectionHandler.HandleAsync(_connection);
+                                return;
+                            }
                         }
                         finally
                         {
@@ -1849,9 +1866,6 @@ namespace System.Extensions.Net
                         }
 
                         //KeepAlive
-                        if (_connectionClose || !Connected)//TODO http1.0 close too fast 
-                            return;
-
                         _headerSize = _end - _start;
                         if (_headerSize == 0)//>0 ==Pipeline
                         {

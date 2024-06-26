@@ -28,6 +28,22 @@ namespace System.Extensions.Net
 
             @this.Properties[_Connection] = connection;
         }
+
+        private static Property<HttpResponse> _ConnectionHandler = new Property<HttpResponse>("HttpServiceExtensions.ConnectionHandler");
+        public static IConnectionHandler ConnectionHandler(this HttpResponse @this)
+        {
+            if (@this == null)
+                return null;
+
+            return (IConnectionHandler)@this.Properties[_ConnectionHandler];
+        }
+        public static void ConnectionHandler(this HttpResponse @this, IConnectionHandler handler)
+        {
+            if (@this == null)
+                throw new ArgumentNullException(nameof(@this));
+
+            @this.Properties[_ConnectionHandler] = handler;
+        }
         public static IHttpService Use(this IHttpService @this, params IHttpHandler[] handlers)
         {
             if (@this == null)
